@@ -31,6 +31,7 @@
 - Proxy request bodies are size-limited.
 - Proxy requests have a timeout.
 - WebSocket upgrades are not proxied.
+- HTTP targets behind an HTTPS Opencoder front end are routed through the proxy path to avoid mixed-content browser blocks.
 
 ## Background checks
 

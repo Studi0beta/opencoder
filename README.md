@@ -145,6 +145,8 @@ If deploy secrets are not set, image publish still runs and deploy is skipped.
 
 When a target is embedded via proxy mode, HTTP traffic is proxied but websocket upgrades are not. For realtime features that depend on websockets, use the "Open in new tab" action.
 
+If Opencoder is served over HTTPS and a target server is only available over HTTP, the app will use proxy mode automatically to avoid mixed-content iframe issues.
+
 ## Acknowledgements
 
 Built to support the OpenCode ecosystem. Thanks to the OpenCode project for the underlying web experience this app helps aggregate and access.

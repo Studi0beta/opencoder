@@ -16,6 +16,8 @@ const DEFAULT_APP_STATE: PersistedAppState = {
 	theme: defaultThemeState()
 };
 
+let cachedState: PersistedAppState = DEFAULT_APP_STATE;
+
 function normalizeRegistryState(input: PersistedState | undefined): PersistedState {
 	if (!input || !Array.isArray(input.servers)) {
 		return DEFAULT_REGISTRY_STATE;
@@ -73,15 +75,21 @@ async function ensureStateDir(): Promise<void> {
 export async function loadAppState(): Promise<PersistedAppState> {
 	try {
 		const raw = await readFile(STATE_FILE, 'utf8');
-		return normalizeAppState(JSON.parse(raw) as Partial<PersistedAppState>);
+		cachedState = normalizeAppState(JSON.parse(raw) as Partial<PersistedAppState>);
+		return cachedState;
 	} catch {
-		return DEFAULT_APP_STATE;
+		return cachedState;
 	}
 }
 
 export async function saveAppState(state: PersistedAppState): Promise<void> {
+	cachedState = normalizeAppState(state);
 	await ensureStateDir();
-	await writeFile(STATE_FILE, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
+	try {
+		await writeFile(STATE_FILE, `${JSON.stringify(cachedState, null, 2)}\n`, 'utf8');
+	} catch {
+		// Fall back to in-memory state if the filesystem is not writable.
+	}
 }
 
 export async function loadRegistryState(): Promise<PersistedState> {

@@ -34,6 +34,7 @@ Each server stores:
 - Proxy mode is used when target framing is blocked.
 - Proxying is intentionally minimal and audited.
 - WebSocket upgrades are not proxied; those flows should open in a new tab.
+- When the app is served over HTTPS, HTTP-only targets are forced through proxy mode to avoid mixed-content iframe failures.
 
 ## Persistence
 

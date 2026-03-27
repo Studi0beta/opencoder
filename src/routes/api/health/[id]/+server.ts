@@ -1,14 +1,14 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { getAllowedTargets } from '$lib/server/target-session';
+import { loadRegistryState } from '$lib/server/app-state-store';
 import { detectDirectFramingBlock } from '$lib/server/framing-policy';
 
 const REQUEST_TIMEOUT_MS = 6500;
 
-export const GET: RequestHandler = async ({ params, cookies, fetch }) => {
+export const GET: RequestHandler = async ({ params, fetch }) => {
 	const id = params.id;
-	const target = getAllowedTargets(cookies).find((item) => item.id === id);
+	const target = (await loadRegistryState()).servers.find((item) => item.id === id);
 	if (!target) {
-		return json({ message: 'Unknown target id. Sync targets first.' }, { status: 404 });
+		return json({ message: 'Unknown target id.' }, { status: 404 });
 	}
 
 	const url = target.healthcheckUrl ?? target.baseUrl;

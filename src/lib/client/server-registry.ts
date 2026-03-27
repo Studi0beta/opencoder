@@ -1,15 +1,10 @@
 import { writable, derived, get } from 'svelte/store';
 import { normalizeServerUrl } from '$lib/shared/url';
 import { RemoteServerRepository } from '$lib/client/server-repository';
-import type { OpencodeServer, PersistedState, ServerInput, SyncTarget } from '$lib/types';
+import type { OpencodeServer, PersistedState, ServerInput } from '$lib/types';
 
 const repository = new RemoteServerRepository();
 const state = writable<PersistedState>({ servers: [], selectedServerId: null });
-
-const syncQueue = {
-	timer: 0,
-	inFlight: false
-};
 
 function nowIso(): string {
 	return new Date().toISOString();
@@ -55,7 +50,6 @@ function persist(nextState: PersistedState): void {
 	void repository.save(nextState).catch(() => {
 		// The UI stays in sync locally and will retry on the next mutation.
 	});
-	queueSync();
 }
 
 function selectedOrFirst(stateValue: PersistedState): string | null {
@@ -69,47 +63,10 @@ function selectedOrFirst(stateValue: PersistedState): string | null {
 	return stateValue.servers[0]?.id ?? null;
 }
 
-async function syncTargets(targets: SyncTarget[]): Promise<void> {
-	await window.fetch('/api/targets/sync', {
-		method: 'POST',
-		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({ targets })
-	});
-}
-
-function queueSync(): void {
-	if (typeof window === 'undefined') {
-		return;
-	}
-
-	window.clearTimeout(syncQueue.timer);
-	syncQueue.timer = window.setTimeout(async () => {
-		if (syncQueue.inFlight) {
-			queueSync();
-			return;
-		}
-
-		syncQueue.inFlight = true;
-		try {
-			const targets = get(state).servers.map((server) => ({
-				id: server.id,
-				baseUrl: server.baseUrl,
-				healthcheckUrl: server.healthcheckUrl
-			}));
-			await syncTargets(targets);
-		} catch {
-			// Silent retry; health/proxy endpoints will report if sync fails.
-		} finally {
-			syncQueue.inFlight = false;
-		}
-	}, 250);
-}
-
 export async function initializeServerRegistry(initialState?: PersistedState): Promise<void> {
 	const loaded = initialState ?? (await repository.load());
 	const selectedServerId = selectedOrFirst(loaded);
 	state.set({ ...loaded, selectedServerId });
-	queueSync();
 }
 
 export function replaceRegistryState(nextState: PersistedState): void {

@@ -61,7 +61,21 @@
 		registry.servers.find((server) => server.id === registry.selectedServerId) ?? null
 	);
 	const selectedHealth = $derived(selectedServer ? healthByServerId[selectedServer.id] : undefined);
-	const selectedEmbedMode = $derived(selectedHealth?.recommendedMode ?? 'direct');
+	const insecureEmbedTarget = $derived.by(() => {
+		if (!browser || !selectedServer) {
+			return false;
+		}
+
+		try {
+			const target = new URL(selectedServer.baseUrl, window.location.origin);
+			return window.location.protocol === 'https:' && target.protocol === 'http:';
+		} catch {
+			return false;
+		}
+	});
+	const selectedEmbedMode = $derived(
+		insecureEmbedTarget ? 'proxy' : (selectedHealth?.recommendedMode ?? 'direct')
+	);
 	const selfEmbeddingBlocked = $derived.by(() => {
 		if (!browser || !selectedServer) {
 			return false;

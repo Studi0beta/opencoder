@@ -1,6 +1,6 @@
 import { dev } from '$app/environment';
 import { error, type RequestHandler } from '@sveltejs/kit';
-import { getAllowedTargets } from '$lib/server/target-session';
+import { loadRegistryState } from '$lib/server/app-state-store';
 
 const REQUEST_TIMEOUT_MS = 15000;
 const MAX_REQUEST_BODY_BYTES = 1024 * 1024 * 2;
@@ -91,7 +91,7 @@ function isWebSocketUpgradeRequest(request: Request): boolean {
 }
 
 async function proxyRequest(event: Parameters<RequestHandler>[0]): Promise<Response> {
-	const { params, cookies, request, url, fetch } = event;
+	const { params, request, url, fetch } = event;
 
 	if (isWebSocketUpgradeRequest(request)) {
 		return new Response(
@@ -109,9 +109,9 @@ async function proxyRequest(event: Parameters<RequestHandler>[0]): Promise<Respo
 		);
 	}
 
-	const target = getAllowedTargets(cookies).find((item) => item.id === params.id);
+	const target = (await loadRegistryState()).servers.find((item) => item.id === params.id);
 	if (!target) {
-		throw error(404, 'Unknown target id. Sync targets first.');
+		throw error(404, 'Unknown target id.');
 	}
 
 	const upstreamUrl = buildUpstreamUrl(target.baseUrl, params.path ?? '', url.search);
