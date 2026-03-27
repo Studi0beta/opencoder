@@ -4,6 +4,8 @@
 
 OpenCode Web must already be running on the target machine before you add the server here. Start OpenCode Web, make it reachable, then paste its URL into Add Server.
 
+This app is best used as a local-first frontend for your OpenCode Web servers. For remote access, prefer WireGuard or Tailscale rather than exposing the frontend directly to the public internet.
+
 ## Start OpenCode Web
 
 Recommended password-protected start:

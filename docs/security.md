@@ -13,6 +13,12 @@
 - Prefer trusted-IP restrictions where possible.
 - Prefer HTTPS or a reverse proxy for wider exposure.
 
+## Access model
+
+- Opencoder is best used as a local-first frontend for OpenCode Web servers.
+- For remote access, prefer WireGuard or Tailscale rather than exposing the app directly.
+- If you do expose it more broadly, keep the underlying OpenCode Web servers password-protected and constrained by trusted-IP rules.
+
 ## Proxy safety
 
 - Proxying is limited to user-configured targets.

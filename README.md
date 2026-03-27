@@ -1,5 +1,9 @@
 # Opencode Hub
 
+<p align="center">
+  <img src="static/logo.svg" alt="Opencoder logo" width="160" />
+</p>
+
 Opencoder is a SvelteKit OpenCode Web server aggregator: a central place to register, monitor, and open multiple OpenCode Web instances. It provides:
 
 - fixed top bar with persistent server list and selection
@@ -8,6 +12,8 @@ Opencoder is a SvelteKit OpenCode Web server aggregator: a central place to regi
 - direct iframe embedding when allowed
 - secure reverse-proxy embedding fallback when framing is blocked
 - import/export server lists as JSON
+
+Opencoder is best used as a local-first frontend for OpenCode Web servers. For remote access, use WireGuard or Tailscale rather than exposing the app directly.
 
 ## Stack
 

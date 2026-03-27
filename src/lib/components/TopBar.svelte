@@ -41,14 +41,22 @@
 <header class="fixed inset-x-0 top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
 	<div class="mx-auto flex h-16 max-w-[1800px] items-center gap-3 px-3 md:px-5">
 		<div class="mr-2 min-w-fit">
-			<div class="flex items-center gap-2">
-				<img src="/logo.svg" alt="" class="h-8 w-8 rounded-md object-contain" />
+			<a
+				class="flex items-center gap-2 rounded-md focus:ring-2 focus:outline-none"
+				href="https://github.com/Studi0beta/opencoder"
+				rel="noreferrer noopener"
+				target="_blank"
+			>
+				<img src="/logo.svg" alt="" class="h-10 w-10 rounded-md object-contain" />
 				<h1 class="text-sm font-semibold tracking-wide text-slate-900 md:text-base">Opencoder</h1>
-			</div>
+			</a>
 		</div>
 
-		<div class="min-w-0 flex-1 overflow-x-auto [scrollbar-width:thin]">
-			<div class="flex min-w-max items-center gap-2 py-1">
+		<div
+			class="min-w-0 flex-1 overflow-x-auto [scrollbar-width:thin]"
+			style="scroll-padding-inline: 0.5rem;"
+		>
+			<div class="flex min-w-max items-center gap-2 py-1 pr-2 pl-2">
 				{#if servers.length === 0}
 					<span
 						class="rounded-md border border-dashed border-slate-300 px-3 py-1.5 text-xs text-slate-500"
@@ -60,7 +68,7 @@
 						<button
 							type="button"
 							onclick={() => handleSelect(server.id)}
-							class={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition focus:ring-2 focus:ring-slate-300 focus:outline-none ${
+							class={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent focus:outline-none ${
 								selected
 									? 'border-slate-900 bg-slate-900 text-white shadow-sm'
 									: 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'

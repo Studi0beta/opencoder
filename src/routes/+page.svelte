@@ -4,6 +4,7 @@
 	import StatusDot from '$lib/components/StatusDot.svelte';
 	import OpenCodeWebSetupGuide from '$lib/components/help/OpenCodeWebSetupGuide.svelte';
 	import ThemeEditor from '$lib/components/ThemeEditor.svelte';
+	import ThemedSurface from '$lib/components/ui/ThemedSurface.svelte';
 	import { buildServerExport, parseServerImport } from '$lib/client/server-transfer';
 	import {
 		DEFAULT_THEME_PRESETS,
@@ -311,12 +312,6 @@
 		);
 	}
 
-	function onFormEscape(event: KeyboardEvent): void {
-		if (event.key === 'Escape') {
-			closeForm();
-		}
-	}
-
 	function persistTheme(): void {
 		if (!browser) {
 			return;
@@ -437,19 +432,27 @@
 >
 	<div class="mx-auto flex h-16 max-w-[1800px] items-center gap-3 px-3 md:px-5">
 		<div class="mr-2 min-w-fit">
-			<div class="flex items-center gap-2">
-				<img src="/logo.svg" alt="" class="h-8 w-8 rounded-md object-contain" />
+			<a
+				class="flex items-center gap-2 rounded-md focus:ring-2 focus:outline-none"
+				href="https://github.com/Studi0beta/opencoder"
+				rel="noreferrer noopener"
+				target="_blank"
+			>
+				<img src="/logo.svg" alt="" class="h-10 w-10 rounded-md object-contain" />
 				<h1
 					class="text-sm font-semibold tracking-wide md:text-base"
 					style="color: var(--hub-text);"
 				>
 					Opencoder
 				</h1>
-			</div>
+			</a>
 		</div>
 
-		<div class="min-w-0 flex-1 overflow-x-auto [scrollbar-width:thin]">
-			<div class="flex min-w-max items-center gap-2 py-1">
+		<div
+			class="min-w-0 flex-1 overflow-x-auto [scrollbar-width:thin]"
+			style="scroll-padding-inline: 0.5rem;"
+		>
+			<div class="flex min-w-max items-center gap-2 py-1 pr-2 pl-2">
 				{#if servers.length === 0}
 					<span
 						class="rounded-md border border-dashed px-3 py-1.5 text-xs"
@@ -461,7 +464,7 @@
 						<button
 							type="button"
 							onclick={() => selectServer(server.id)}
-							class={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition focus:ring-2 focus:outline-none ${
+							class={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent focus:outline-none ${
 								selected ? 'shadow-sm' : 'hover:opacity-90'
 							}`}
 							style={`border-color: ${selected ? 'var(--hub-brand)' : 'var(--hub-border)'}; background: ${selected ? 'var(--hub-brand)' : 'var(--hub-surface)'}; color: ${selected ? 'var(--hub-bg)' : 'var(--hub-text)'};`}
@@ -488,6 +491,16 @@
 				onDeleteSavedPalette={handleDeleteSavedThemePalette}
 				onReset={handleResetTheme}
 			/>
+			<button
+				type="button"
+				onclick={() => {
+					setupGuideOpen = true;
+				}}
+				class="rounded-lg border px-3 py-1.5 text-xs transition hover:opacity-90 focus:ring-2 focus:outline-none"
+				style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface);"
+			>
+				Help
+			</button>
 			<button
 				type="button"
 				onclick={triggerImport}
@@ -660,116 +673,113 @@
 	</div>
 </main>
 
-{#if formOpen}
+<ThemedSurface
+	open={formOpen}
+	title={editingServer ? 'Edit server' : 'Add opencode server'}
+	eyebrow="Server details"
+	description="Server URLs are normalized and validated before save."
+	onClose={closeForm}
+>
 	<div
-		class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/45 px-4"
-		role="dialog"
-		aria-modal="true"
-		tabindex="-1"
-		onkeydown={onFormEscape}
+		class="mb-4 flex items-center justify-between gap-3 rounded-xl border px-3 py-2"
+		style="border-color: var(--hub-border); background: var(--hub-surface);"
 	>
-		<div class="w-full max-w-2xl rounded-xl border border-slate-200 bg-white shadow-lg">
-			<div class="border-b border-slate-200 px-6 py-4">
-				<h2 class="text-lg font-semibold text-slate-900">
-					{editingServer ? 'Edit server' : 'Add opencode server'}
-				</h2>
-				<p class="mt-1 text-sm text-slate-600">
-					Server URLs are normalized and validated before save.
-				</p>
-				<div
-					class="mt-3 flex items-center justify-between gap-3 rounded-xl border px-3 py-2"
-					style="border-color: var(--hub-border); background: var(--hub-surface);"
-				>
+		<p class="text-xs" style="color: var(--hub-muted);">
+			Need help setting up OpenCode Web on your server? View OpenCode Web setup instructions.
+		</p>
+		<button
+			type="button"
+			onclick={() => {
+				setupGuideOpen = true;
+			}}
+			class="rounded-lg px-3 py-2 text-xs font-medium transition hover:opacity-90"
+			style="background: var(--hub-brand); color: var(--hub-bg);"
+		>
+			View OpenCode Web setup instructions
+		</button>
+	</div>
+
+	<form class="space-y-4" onsubmit={submitServerForm}>
+		<div class="grid gap-4 md:grid-cols-2">
+			<label class="space-y-1 text-sm" style="color: var(--hub-muted);">
+				<span class="font-medium" style="color: var(--hub-text);">Name</span>
+				<input
+					required
+					maxlength="80"
+					bind:value={formName}
+					class="w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition outline-none focus:ring-2"
+					style="border-color: var(--hub-border); background: var(--hub-surface); color: var(--hub-text);"
+					placeholder="Primary"
+				/>
+			</label>
+			<label class="space-y-1 text-sm" style="color: var(--hub-muted);">
+				<span class="font-medium" style="color: var(--hub-text);">Base URL</span>
+				<input
+					required
+					bind:value={formBaseUrl}
+					class="w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition outline-none focus:ring-2"
+					style="border-color: var(--hub-border); background: var(--hub-surface); color: var(--hub-text);"
+					placeholder="https://opencode.example.com"
+				/>
+				{#if isRemoteBaseUrl(formBaseUrl)}
 					<p class="text-xs" style="color: var(--hub-muted);">
-						Need help setting up OpenCode Web on your server? View OpenCode Web setup instructions.
-					</p>
-					<button
-						type="button"
-						onclick={() => {
-							setupGuideOpen = true;
-						}}
-						class="rounded-lg px-3 py-2 text-xs font-medium transition hover:opacity-90"
-						style="background: var(--hub-brand); color: var(--hub-bg);"
-					>
-						View OpenCode Web setup instructions
-					</button>
-				</div>
-			</div>
-
-			<form class="space-y-4 px-6 py-5" onsubmit={submitServerForm}>
-				<div class="grid gap-4 md:grid-cols-2">
-					<label class="space-y-1 text-sm text-slate-700">
-						<span class="font-medium">Name</span>
-						<input
-							required
-							maxlength="80"
-							bind:value={formName}
-							class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-							placeholder="Primary"
-						/>
-					</label>
-					<label class="space-y-1 text-sm text-slate-700">
-						<span class="font-medium">Base URL</span>
-						<input
-							required
-							bind:value={formBaseUrl}
-							class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-							placeholder="https://opencode.example.com"
-						/>
-						{#if isRemoteBaseUrl(formBaseUrl)}
-							<p class="text-xs" style="color: var(--hub-muted);">
-								Before adding a remote server, make sure OpenCode Web is running and protected with
-								a password.
-							</p>
-						{/if}
-					</label>
-				</div>
-
-				<label class="block space-y-1 text-sm text-slate-700">
-					<span class="font-medium">Healthcheck URL (optional)</span>
-					<input
-						bind:value={formHealthcheckUrl}
-						class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-						placeholder="https://opencode.example.com/health"
-					/>
-				</label>
-
-				<label class="block space-y-1 text-sm text-slate-700">
-					<span class="font-medium">Description (optional)</span>
-					<textarea
-						rows="3"
-						maxlength="240"
-						bind:value={formDescription}
-						class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-						placeholder="Team cluster"
-					></textarea>
-				</label>
-
-				{#if formError}
-					<p class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-						{formError}
+						Before adding a remote server, make sure OpenCode Web is running and protected with a
+						password.
 					</p>
 				{/if}
-
-				<div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
-					<button
-						type="button"
-						onclick={closeForm}
-						class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 focus:outline-none"
-					>
-						Cancel
-					</button>
-					<button
-						type="submit"
-						class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 focus:ring-2 focus:ring-slate-300 focus:outline-none"
-					>
-						{editingServer ? 'Save changes' : 'Add server'}
-					</button>
-				</div>
-			</form>
+			</label>
 		</div>
-	</div>
-{/if}
+
+		<label class="block space-y-1 text-sm" style="color: var(--hub-muted);">
+			<span class="font-medium" style="color: var(--hub-text);">Healthcheck URL (optional)</span>
+			<input
+				bind:value={formHealthcheckUrl}
+				class="w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition outline-none focus:ring-2"
+				style="border-color: var(--hub-border); background: var(--hub-surface); color: var(--hub-text);"
+				placeholder="https://opencode.example.com/health"
+			/>
+		</label>
+
+		<label class="block space-y-1 text-sm" style="color: var(--hub-muted);">
+			<span class="font-medium" style="color: var(--hub-text);">Description (optional)</span>
+			<textarea
+				rows="3"
+				maxlength="240"
+				bind:value={formDescription}
+				class="w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition outline-none focus:ring-2"
+				style="border-color: var(--hub-border); background: var(--hub-surface); color: var(--hub-text);"
+				placeholder="Team cluster"
+			></textarea>
+		</label>
+
+		{#if formError}
+			<p class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+				{formError}
+			</p>
+		{/if}
+
+		<div
+			class="flex items-center justify-end gap-2 border-t pt-4"
+			style="border-color: var(--hub-border);"
+		>
+			<button
+				type="button"
+				onclick={closeForm}
+				class="rounded-lg border px-4 py-2 text-sm transition hover:opacity-90 focus:ring-2 focus:outline-none"
+				style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface);"
+			>
+				Cancel
+			</button>
+			<button
+				type="submit"
+				class="rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-90 focus:ring-2 focus:outline-none"
+				style="background: var(--hub-brand); color: var(--hub-bg);"
+			>
+				{editingServer ? 'Save changes' : 'Add server'}
+			</button>
+		</div>
+	</form>
+</ThemedSurface>
 
 <OpenCodeWebSetupGuide
 	open={setupGuideOpen}
@@ -778,29 +788,29 @@
 	}}
 />
 
-{#if deletingServerId}
-	<div class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/45 px-4">
-		<div class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-lg">
-			<h2 class="text-lg font-semibold text-slate-900">Delete server?</h2>
-			<p class="mt-2 text-sm text-slate-600">
-				This removes the server from your local list and clears proxy access for it.
-			</p>
-			<div class="mt-5 flex justify-end gap-2">
-				<button
-					type="button"
-					onclick={cancelDelete}
-					class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-				>
-					Cancel
-				</button>
-				<button
-					type="button"
-					onclick={deleteServerConfirmed}
-					class="rounded-lg bg-rose-700 px-4 py-2 text-sm text-white hover:bg-rose-600"
-				>
-					Delete
-				</button>
-			</div>
-		</div>
+<ThemedSurface
+	open={!!deletingServerId}
+	title="Delete server?"
+	eyebrow="Danger zone"
+	description="This removes the server from your local list and clears proxy access for it."
+	onClose={cancelDelete}
+>
+	<div class="flex justify-end gap-2">
+		<button
+			type="button"
+			onclick={cancelDelete}
+			class="rounded-lg border px-4 py-2 text-sm transition hover:opacity-90"
+			style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface);"
+		>
+			Cancel
+		</button>
+		<button
+			type="button"
+			onclick={deleteServerConfirmed}
+			class="rounded-lg px-4 py-2 text-sm font-medium transition hover:opacity-90"
+			style="background: #dc2626; color: white;"
+		>
+			Delete
+		</button>
 	</div>
-{/if}
+</ThemedSurface>
