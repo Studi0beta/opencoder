@@ -90,7 +90,7 @@ function parseSavedPalettes(value: unknown): SavedThemePalette[] {
 		return [];
 	}
 
-	return value.flatMap((item, index) => {
+	return value.flatMap((item) => {
 		if (!isObject(item)) {
 			return [];
 		}
