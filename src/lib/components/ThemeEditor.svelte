@@ -30,6 +30,7 @@
 	let open = $state(false);
 	let draft = $state<ThemePalette>({ background: '#0b1020', text: '#e5ecff', brand: '#22c55e' });
 	let schemeName = $state('My scheme');
+	let colorPickStatus = $state('');
 
 	$effect(() => {
 		draft = activePalette;
@@ -61,6 +62,31 @@
 			text,
 			brand
 		};
+	}
+
+	async function pickColor(field: keyof ThemePalette): Promise<void> {
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		const EyeDropperCtor = (
+			window as Window & {
+				EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> };
+			}
+		).EyeDropper;
+
+		if (!EyeDropperCtor) {
+			colorPickStatus = 'Color dropper is not supported in this browser.';
+			return;
+		}
+
+		try {
+			colorPickStatus = '';
+			const result = await new EyeDropperCtor().open();
+			draft = { ...draft, [field]: result.sRGBHex };
+		} catch {
+			// User cancelled or browser blocked the picker.
+		}
 	}
 </script>
 
@@ -108,6 +134,15 @@
 					<span>Background</span>
 					<div class="flex items-center gap-2">
 						<input type="color" bind:value={draft.background} class="h-7 w-8 rounded border p-0" />
+						<button
+							type="button"
+							onclick={() => pickColor('background')}
+							class="h-7 rounded border px-2 text-[11px]"
+							style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface-2);"
+							title="Pick a color from the screen"
+						>
+							Pick
+						</button>
 						<input
 							type="text"
 							bind:value={draft.background}
@@ -123,6 +158,15 @@
 					<span>Text</span>
 					<div class="flex items-center gap-2">
 						<input type="color" bind:value={draft.text} class="h-7 w-8 rounded border p-0" />
+						<button
+							type="button"
+							onclick={() => pickColor('text')}
+							class="h-7 rounded border px-2 text-[11px]"
+							style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface-2);"
+							title="Pick a color from the screen"
+						>
+							Pick
+						</button>
 						<input
 							type="text"
 							bind:value={draft.text}
@@ -138,6 +182,15 @@
 					<span>Brand</span>
 					<div class="flex items-center gap-2">
 						<input type="color" bind:value={draft.brand} class="h-7 w-8 rounded border p-0" />
+						<button
+							type="button"
+							onclick={() => pickColor('brand')}
+							class="h-7 rounded border px-2 text-[11px]"
+							style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface-2);"
+							title="Pick a color from the screen"
+						>
+							Pick
+						</button>
 						<input
 							type="text"
 							bind:value={draft.brand}
@@ -201,6 +254,10 @@
 					Save
 				</button>
 			</div>
+
+			{#if colorPickStatus}
+				<p class="mt-2 text-xs" style="color: var(--hub-muted);">{colorPickStatus}</p>
+			{/if}
 
 			<div class="mt-3 border-t pt-3" style="border-color: var(--hub-border);">
 				<p class="mb-1 text-xs font-medium" style="color: var(--hub-muted);">Saved schemes</p>

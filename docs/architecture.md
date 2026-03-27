@@ -53,3 +53,7 @@ Each server stores:
 - The add-server flow includes a reusable OpenCode Web setup drawer.
 - The drawer explains launch, service, firewall, and security steps.
 - Code blocks include copy buttons for quick onboarding.
+
+## Theme editor
+
+- The theme editor supports direct color input and screen color picking via the browser EyeDropper API.

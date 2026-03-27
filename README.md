@@ -34,8 +34,9 @@ Open `http://localhost:5173`.
 1. Start OpenCode Web on the machine you want to connect to.
 2. Add it in Opencoder with `Add server`.
 3. Select the server in the top bar to see status and open it.
-4. Use `Edit`, `Delete`, `Import`, or `Export` as needed.
-5. Click `Help` for the full setup steps.
+4. Use the theme editor to change colors or pick a color from anywhere on screen.
+5. Use `Edit`, `Delete`, `Import`, or `Export` as needed.
+6. Click `Help` for the full setup steps.
 
 ## Import and Export
 

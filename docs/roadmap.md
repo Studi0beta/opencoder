@@ -69,3 +69,4 @@
 - [x] Add top-bar help access and in-dialog section navigation
 - [x] Add local-first access guidance for WireGuard/Tailscale
 - [x] Export and import full app state
+- [x] Add screen color dropper to theme editor
