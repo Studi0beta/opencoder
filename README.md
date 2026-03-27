@@ -68,6 +68,10 @@ docker compose up -d --build app
 
 Open `http://localhost:3000`.
 
+If you want to reach Opencoder directly on the LAN, publish the app port in your deployment (`3000:3000`). If you front it with Caddy or another reverse proxy, keep Opencoder behind that proxy instead.
+
+If you want direct iframe embedding for a server, give Opencoder the HTTPS URL exposed by your reverse proxy. For example, proxy `https://libertas-oc.skidd.lab.skiddychops.co.uk` to `http://192.168.0.69:4069`, then add the HTTPS URL here.
+
 ## Scripts
 
 - `npm run dev` - local Vite dev server

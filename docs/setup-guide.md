@@ -39,6 +39,8 @@ https://your-domain.example.com
 
 - Use `http://SERVER_IP:4096` for LAN, VM, or internal host access.
 - Use `https://your-domain.example.com` when a reverse proxy or TLS endpoint is in front of OpenCode Web.
+- For direct iframe embedding in Opencoder, prefer the HTTPS reverse-proxy URL, not the raw `http://SERVER_IP:4096` URL.
+- Example: proxy `https://libertas-oc.skidd.lab.skiddychops.co.uk` to `http://192.168.0.69:4069`, then paste the HTTPS URL into Opencoder.
 
 ## Optional config file
 

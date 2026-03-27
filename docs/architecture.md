@@ -35,6 +35,7 @@ Each server stores:
 - Proxying is intentionally minimal and audited.
 - WebSocket upgrades are not proxied; those flows should open in a new tab.
 - When the app is served over HTTPS, HTTP-only targets are forced through proxy mode to avoid mixed-content iframe failures.
+- If you want direct embedding, put the OpenCode Web server behind HTTPS and add that HTTPS URL to Opencoder.
 
 ## Persistence
 
