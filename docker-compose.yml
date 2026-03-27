@@ -12,6 +12,9 @@ services:
       HOST: 0.0.0.0
       OPENCODE_HUB_PROXY_SECRET: ${OPENCODE_HUB_PROXY_SECRET:-change-this-secret}
       ALLOW_PRIVATE_NETWORK_TARGETS: ${ALLOW_PRIVATE_NETWORK_TARGETS:-false}
+      OPENCODE_HUB_STATE_FILE: /app/.opencode-hub/state.json
+    volumes:
+      - opencode-hub-state:/app/.opencode-hub
 
   app-dev:
     build:
@@ -28,3 +31,6 @@ services:
       - .:/app
       - /app/node_modules
     command: npm run dev -- --host 0.0.0.0 --port 5173
+
+volumes:
+  opencode-hub-state:

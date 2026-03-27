@@ -37,9 +37,9 @@ Each server stores:
 
 ## Persistence
 
-- Server definitions and selection live in browser `localStorage`.
-- Theme state also persists in `localStorage`.
-- The registry layer is isolated so a backend can replace it later.
+- Server definitions, selection, and theme state are stored server-side.
+- State is written to `.opencode-hub/state.json` by default.
+- `OPENCODE_HUB_STATE_FILE` can override the file path when needed.
 
 ## Setup guide
 

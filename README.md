@@ -6,7 +6,7 @@
 
 Opencoder is a SvelteKit OpenCode Web server aggregator: a central place to register, monitor, and open multiple OpenCode Web instances. It provides:
 
-- fixed top bar with persistent server list and selection
+- fixed top bar with server list and selection persisted on the server
 - server CRUD with URL normalization + duplicate prevention
 - periodic health checks with online/offline/degraded states
 - direct iframe embedding when allowed
@@ -14,6 +14,8 @@ Opencoder is a SvelteKit OpenCode Web server aggregator: a central place to regi
 - import/export server lists as JSON
 
 Opencoder is best used as a local-first frontend for OpenCode Web servers. For remote access, use WireGuard or Tailscale rather than exposing the app directly.
+
+Server registry and theme state are stored server-side in `.opencode-hub/state.json` by default, so switching browsers restores the same saved state.
 
 ## Stack
 
@@ -80,6 +82,7 @@ PORT=3000
 
 - `OPENCODE_HUB_PROXY_SECRET` is required for production to sign target-allowlist cookies.
 - `ALLOW_PRIVATE_NETWORK_TARGETS` defaults to `false` to reduce SSRF risk.
+- `OPENCODE_HUB_STATE_FILE` optionally overrides the persisted app state path.
 
 ## Architecture Notes
 

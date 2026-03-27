@@ -38,11 +38,11 @@
 - [x] Document limitations and known gaps
 - [x] Validate redirect and SSRF guardrails
 
-### 6. Local persistence
+### 6. Server-backed persistence
 
-- [x] Browser storage repository
+- [x] Server-backed registry repository
 - [x] Registry sync layer
-- [x] Theme state persistence
+- [x] Server-backed theme persistence
 - [x] Validate load/save behavior
 
 ### 7. Containerisation

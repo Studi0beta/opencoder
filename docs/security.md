@@ -19,6 +19,11 @@
 - For remote access, prefer WireGuard or Tailscale rather than exposing the app directly.
 - If you do expose it more broadly, keep the underlying OpenCode Web servers password-protected and constrained by trusted-IP rules.
 
+## Server state
+
+- App state is stored server-side in `.opencode-hub/state.json` by default.
+- Keep that file on a trusted host and protect the app itself with the same controls you would use for other internal admin tools.
+
 ## Proxy safety
 
 - Proxying is limited to user-configured targets.

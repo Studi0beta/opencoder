@@ -16,6 +16,12 @@ export interface SavedThemePalette extends ThemePalette {
 	createdAt: string;
 }
 
+export interface PersistedThemeState {
+	activeThemePresetId: string | null;
+	activePalette: ThemePalette;
+	savedPalettes: SavedThemePalette[];
+}
+
 export interface AppliedThemeVariables {
 	'--hub-bg': string;
 	'--hub-text': string;
@@ -77,6 +83,18 @@ export const DEFAULT_THEME_PRESETS: ThemePreset[] = [
 		}
 	}
 ];
+
+export function defaultThemeState(): PersistedThemeState {
+	return {
+		activeThemePresetId: DEFAULT_THEME_PRESETS[0]?.id ?? null,
+		activePalette: DEFAULT_THEME_PRESETS[0]?.palette ?? {
+			background: '#0b1020',
+			text: '#e5ecff',
+			brand: '#22c55e'
+		},
+		savedPalettes: []
+	};
+}
 
 function clamp(value: number, min: number, max: number): number {
 	return Math.min(Math.max(value, min), max);

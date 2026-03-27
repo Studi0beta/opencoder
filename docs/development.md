@@ -31,8 +31,8 @@ docker compose up --build app-dev
 
 - `src/routes` - page shell, API endpoints, and route layout
 - `src/lib/components` - reusable UI
-- `src/lib/server` - server-side policy and proxy helpers
-- `src/lib/client` - browser persistence and registry logic
+- `src/lib/server` - server-side policy, proxy helpers, and persisted app state
+- `src/lib/client` - browser-facing registry/theme sync and UI state logic
 - `docs` - architecture, setup, security, roadmap, and decisions
 
 ## Workflow notes

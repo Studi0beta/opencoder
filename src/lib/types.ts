@@ -1,3 +1,5 @@
+import type { SavedThemePalette, ThemePalette } from '$lib/theme';
+
 export type HealthState = 'unknown' | 'online' | 'offline' | 'degraded';
 
 export type EmbedMode = 'direct' | 'proxy' | 'fallback';
@@ -31,6 +33,17 @@ export interface ServerHealth {
 export interface PersistedState {
 	servers: OpencodeServer[];
 	selectedServerId: string | null;
+}
+
+export interface PersistedThemeState {
+	activeThemePresetId: string | null;
+	activePalette: ThemePalette;
+	savedPalettes: SavedThemePalette[];
+}
+
+export interface PersistedAppState {
+	registry: PersistedState;
+	theme: PersistedThemeState;
 }
 
 export interface SyncTarget {

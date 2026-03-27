@@ -8,7 +8,6 @@
 	import { buildServerExport, parseServerImport } from '$lib/client/server-transfer';
 	import {
 		DEFAULT_THEME_PRESETS,
-		THEME_STORAGE_KEY,
 		buildThemeVariables,
 		type SavedThemePalette,
 		type ThemePalette
@@ -22,10 +21,14 @@
 		selectServer,
 		updateServer
 	} from '$lib/client/server-registry';
+	import { saveThemeState } from '$lib/client/theme-repository';
 	import type { OpencodeServer, PersistedState, ServerHealth, ServerInput } from '$lib/types';
+	import type { PageData } from './$types';
 
 	const POLL_INTERVAL_MS = 45000;
 	const REFRESH_DEBOUNCE_MS = 600;
+
+	let { data }: { data: PageData } = $props();
 
 	let formOpen = $state(false);
 	let formError = $state('');
@@ -90,33 +93,16 @@
 	let intervalId = 0;
 
 	onMount(() => {
-		if (browser) {
-			try {
-				const raw = localStorage.getItem(THEME_STORAGE_KEY);
-				if (raw) {
-					const parsed = JSON.parse(raw) as {
-						activePresetId: string | null;
-						activePalette: ThemePalette;
-						savedPalettes: SavedThemePalette[];
-					};
-					activeThemePresetId = parsed.activePresetId;
-					activePalette = parsed.activePalette;
-					savedPalettes = Array.isArray(parsed.savedPalettes) ? parsed.savedPalettes : [];
-				}
-			} catch {
-				activeThemePresetId = DEFAULT_THEME_PRESETS[0]?.id ?? null;
-				activePalette = DEFAULT_THEME_PRESETS[0]?.palette ?? activePalette;
-				savedPalettes = [];
-			}
-
-			applyTheme(activePalette);
-		}
+		registry = data.appState.registry;
+		activeThemePresetId = data.appState.theme.activeThemePresetId;
+		activePalette = data.appState.theme.activePalette;
+		savedPalettes = data.appState.theme.savedPalettes;
+		applyTheme(activePalette);
+		void initializeServerRegistry(data.appState.registry);
 
 		const unsubscribe = registryState.subscribe((nextState) => {
 			registry = nextState;
 		});
-
-		initializeServerRegistry();
 		void refreshHealth(true);
 
 		intervalId = window.setInterval(() => {
@@ -313,18 +299,13 @@
 	}
 
 	function persistTheme(): void {
-		if (!browser) {
-			return;
-		}
-
-		localStorage.setItem(
-			THEME_STORAGE_KEY,
-			JSON.stringify({
-				activePresetId: activeThemePresetId,
-				activePalette,
-				savedPalettes
-			})
-		);
+		void saveThemeState({
+			activeThemePresetId,
+			activePalette,
+			savedPalettes
+		}).catch(() => {
+			// The current browser stays updated; the next successful save will retry.
+		});
 	}
 
 	function applyTheme(palette: ThemePalette): void {
