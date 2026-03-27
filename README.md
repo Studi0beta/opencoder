@@ -4,7 +4,9 @@
   <img src="static/logo.svg" alt="Opencoder logo" width="160" />
 </p>
 
-Opencoder is a SvelteKit OpenCode Web server aggregator: a central place to register, monitor, and open multiple OpenCode Web instances. It provides:
+Opencoder is a simple dashboard for OpenCode Web servers.
+
+It provides:
 
 - fixed top bar with server list and selection persisted on the server
 - server CRUD with URL normalization + duplicate prevention
@@ -16,6 +18,24 @@ Opencoder is a SvelteKit OpenCode Web server aggregator: a central place to regi
 Opencoder is best used as a local-first frontend for OpenCode Web servers. For remote access, use WireGuard or Tailscale rather than exposing the app directly.
 
 Server registry and theme state are stored server-side in `.opencode-hub/state.json` by default, so switching browsers restores the same saved state.
+
+## Quick Start (host)
+
+```bash
+npm ci
+cp .env.example .env
+npm run dev
+```
+
+Open `http://localhost:5173`.
+
+## Quick User Guide
+
+1. Start OpenCode Web on the machine you want to connect to.
+2. Add it in Opencoder with `Add server`.
+3. Select the server in the top bar to see status and open it.
+4. Use `Edit`, `Delete`, `Import`, or `Export` as needed.
+5. Click `Help` for the full setup steps.
 
 ## Import and Export
 
@@ -29,16 +49,6 @@ Server registry and theme state are stored server-side in `.opencode-hub/state.j
 - Tailwind CSS
 - Vite (HMR in local dev)
 - Node adapter for production containers
-
-## Quick Start (host)
-
-```bash
-npm ci
-cp .env.example .env
-npm run dev
-```
-
-Open `http://localhost:5173`.
 
 ## Local Dev in Container (with live updates)
 
