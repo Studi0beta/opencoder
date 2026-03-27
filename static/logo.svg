@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-labelledby="title desc">
+  <title id="title">Keyboard Flame Logo</title>
+  <desc id="desc">Minimal modern logo of a full keyboard with a wide premium flame.</desc>
+
+  <defs>
+    <linearGradient id="kbdStroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F5F5F5"/>
+      <stop offset="100%" stop-color="#CFCFCF"/>
+    </linearGradient>
+
+    <linearGradient id="keyFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F2F2F2"/>
+      <stop offset="100%" stop-color="#DDDDDD"/>
+    </linearGradient>
+
+    <linearGradient id="flameGlow" x1="512" y1="220" x2="512" y2="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF1A8"/>
+      <stop offset="48%" stop-color="#FFB000"/>
+      <stop offset="100%" stop-color="#FF4B00"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="transparent"/>
+
+  <!-- Flame -->
+  <g>
+    <path
+      fill="#FFFFFF"
+      d="
+        M512 222
+        C486 266 481 303 462 345
+        C448 330 442 310 443 286
+        C410 318 392 362 394 411
+        C371 392 361 361 365 324
+        C328 364 318 416 333 474
+        C359 451 389 432 423 419
+        C451 409 480 404 503 406
+        C490 387 486 366 489 340
+        C506 355 512 374 512 393
+        C512 374 518 355 535 340
+        C538 366 534 387 521 406
+        C544 404 573 409 601 419
+        C635 432 665 451 691 474
+        C706 416 696 364 659 324
+        C663 361 653 392 630 411
+        C632 362 614 318 581 286
+        C582 310 576 330 562 345
+        C543 303 538 266 512 222
+        Z
+      "
+    />
+  </g>
+
+  <!-- Keyboard -->
+  <g>
+    <path
+      d="
+        M212 538
+        L812 538
+        C832 538 848 554 848 574
+        L832 686
+        C829 708 811 726 789 726
+        L235 726
+        C213 726 195 708 192 686
+        L176 574
+        C176 554 192 538 212 538
+        Z
+      "
+      fill="none"
+      stroke="url(#kbdStroke)"
+      stroke-width="16"
+      stroke-linejoin="round"
+    />
+
+    <g fill="url(#keyFill)">
+      <!-- Row 1 -->
+      <rect x="232" y="572" width="44" height="18" rx="6"/>
+      <rect x="288" y="572" width="44" height="18" rx="6"/>
+      <rect x="344" y="572" width="44" height="18" rx="6"/>
+      <rect x="400" y="572" width="44" height="18" rx="6"/>
+      <rect x="456" y="572" width="44" height="18" rx="6"/>
+      <rect x="512" y="572" width="44" height="18" rx="6"/>
+      <rect x="568" y="572" width="44" height="18" rx="6"/>
+      <rect x="624" y="572" width="44" height="18" rx="6"/>
+      <rect x="680" y="572" width="44" height="18" rx="6"/>
+      <rect x="736" y="572" width="44" height="18" rx="6"/>
+
+      <!-- Row 2 -->
+      <rect x="220" y="608" width="62" height="18" rx="6"/>
+      <rect x="294" y="608" width="44" height="18" rx="6"/>
+      <rect x="350" y="608" width="44" height="18" rx="6"/>
+      <rect x="406" y="608" width="44" height="18" rx="6"/>
+      <rect x="462" y="608" width="44" height="18" rx="6"/>
+      <rect x="518" y="608" width="44" height="18" rx="6"/>
+      <rect x="574" y="608" width="44" height="18" rx="6"/>
+      <rect x="630" y="608" width="44" height="18" rx="6"/>
+      <rect x="686" y="608" width="44" height="18" rx="6"/>
+      <rect x="742" y="608" width="50" height="18" rx="6"/>
+
+      <!-- Row 3 -->
+      <rect x="216" y="644" width="76" height="18" rx="6"/>
+      <rect x="304" y="644" width="44" height="18" rx="6"/>
+      <rect x="360" y="644" width="44" height="18" rx="6"/>
+      <rect x="416" y="644" width="44" height="18" rx="6"/>
+      <rect x="472" y="644" width="44" height="18" rx="6"/>
+      <rect x="528" y="644" width="44" height="18" rx="6"/>
+      <rect x="584" y="644" width="44" height="18" rx="6"/>
+      <rect x="640" y="644" width="44" height="18" rx="6"/>
+      <rect x="696" y="644" width="44" height="18" rx="6"/>
+      <rect x="752" y="644" width="36" height="18" rx="6"/>
+
+      <!-- Row 4 -->
+      <rect x="232" y="680" width="56" height="18" rx="6"/>
+      <rect x="300" y="680" width="56" height="18" rx="6"/>
+      <rect x="368" y="680" width="56" height="18" rx="6"/>
+      <rect x="436" y="680" width="184" height="18" rx="6"/>
+      <rect x="632" y="680" width="56" height="18" rx="6"/>
+      <rect x="700" y="680" width="56" height="18" rx="6"/>
+      <rect x="768" y="680" width="20" height="18" rx="6"/>
+    </g>
+  </g>
+</svg>
