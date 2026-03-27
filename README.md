@@ -1,6 +1,10 @@
 # Opencoder
 
-Opencode Hub is a SvelteKit app shell that centralizes access to multiple opencode servers. It provides:
+<p align="center">
+  <img src="static/logo.svg" alt="Opencoder logo" width="160" />
+</p>
+
+Opencoder is a SvelteKit OpenCode Web server aggregator: a central place to register, monitor, and open multiple OpenCode Web instances. It provides:
 
 - fixed top bar with persistent server list and selection
 - server CRUD with URL normalization + duplicate prevention
@@ -8,6 +12,8 @@ Opencode Hub is a SvelteKit app shell that centralizes access to multiple openco
 - direct iframe embedding when allowed
 - secure reverse-proxy embedding fallback when framing is blocked
 - import/export server lists as JSON
+
+Opencoder is best used as a local-first frontend for OpenCode Web servers. For remote access, use WireGuard or Tailscale rather than exposing the app directly.
 
 ## Stack
 
@@ -77,12 +83,18 @@ PORT=3000
 
 ## Architecture Notes
 
-See `ARCHITECTURE.md` for embedding, proxying, health checks, persistence, security, and limitations.
+See `docs/architecture.md` for embedding, proxying, health checks, persistence, security, and limitations.
+
+## OpenCode Web Setup
+
+See `docs/setup-guide.md` for the setup instructions shown in the Add Server flow.
 
 ## Releases and Branch Rules
 
 - Changelog template: `CHANGELOG.md`
 - Repo operations guide (branch protection + release tagging): `docs/REPO_OPERATIONS.md`
+- Roadmap and milestone tracker: `docs/roadmap.md`
+- Decision log: `docs/decisions.md`
 
 ## CI/CD (GitHub Actions)
 
@@ -111,3 +123,7 @@ If deploy secrets are not set, image publish still runs and deploy is skipped.
 ## WebSocket note
 
 When a target is embedded via proxy mode, HTTP traffic is proxied but websocket upgrades are not. For realtime features that depend on websockets, use the "Open in new tab" action.
+
+## Acknowledgements
+
+Built to support the OpenCode ecosystem. Thanks to the OpenCode project for the underlying web experience this app helps aggregate and access.
