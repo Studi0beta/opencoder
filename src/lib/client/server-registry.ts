@@ -1,9 +1,9 @@
 import { writable, derived, get } from 'svelte/store';
 import { normalizeServerUrl } from '$lib/shared/url';
-import { LocalStorageServerRepository } from '$lib/client/server-repository';
+import { RemoteServerRepository } from '$lib/client/server-repository';
 import type { OpencodeServer, PersistedState, ServerInput, SyncTarget } from '$lib/types';
 
-const repository = new LocalStorageServerRepository();
+const repository = new RemoteServerRepository();
 const state = writable<PersistedState>({ servers: [], selectedServerId: null });
 
 const syncQueue = {
@@ -52,7 +52,9 @@ function toServerInput(input: ServerInput): ServerInput {
 
 function persist(nextState: PersistedState): void {
 	state.set(nextState);
-	repository.save(nextState);
+	void repository.save(nextState).catch(() => {
+		// The UI stays in sync locally and will retry on the next mutation.
+	});
 	queueSync();
 }
 
@@ -103,11 +105,18 @@ function queueSync(): void {
 	}, 250);
 }
 
-export function initializeServerRegistry(): void {
-	const loaded = repository.load();
+export async function initializeServerRegistry(initialState?: PersistedState): Promise<void> {
+	const loaded = initialState ?? (await repository.load());
 	const selectedServerId = selectedOrFirst(loaded);
 	state.set({ ...loaded, selectedServerId });
 	queueSync();
+}
+
+export function replaceRegistryState(nextState: PersistedState): void {
+	persist({
+		servers: nextState.servers,
+		selectedServerId: selectedOrFirst(nextState)
+	});
 }
 
 export function addServer(input: ServerInput): OpencodeServer {

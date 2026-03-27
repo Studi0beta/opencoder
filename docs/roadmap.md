@@ -38,11 +38,11 @@
 - [x] Document limitations and known gaps
 - [x] Validate redirect and SSRF guardrails
 
-### 6. Local persistence
+### 6. Server-backed persistence
 
-- [x] Browser storage repository
+- [x] Server-backed registry repository
 - [x] Registry sync layer
-- [x] Theme state persistence
+- [x] Server-backed theme persistence
 - [x] Validate load/save behavior
 
 ### 7. Containerisation
@@ -68,3 +68,4 @@
 - [x] Standardize dialogs/help windows with shared themed shell
 - [x] Add top-bar help access and in-dialog section navigation
 - [x] Add local-first access guidance for WireGuard/Tailscale
+- [x] Export and import full app state

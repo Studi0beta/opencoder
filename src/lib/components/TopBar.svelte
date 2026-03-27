@@ -36,6 +36,10 @@
 	function selectedServerBaseUrl(id: string): string {
 		return servers.find((item) => item.id === id)?.baseUrl ?? '';
 	}
+
+	function selectedServerName(id: string): string {
+		return servers.find((item) => item.id === id)?.name ?? '';
+	}
 </script>
 
 <header class="fixed inset-x-0 top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -117,9 +121,22 @@
 
 	{#if selectedServerId}
 		<div
-			class="mx-auto flex h-8 max-w-[1800px] items-center justify-between border-t border-slate-200 px-3 text-[11px] text-slate-500 md:px-5"
+			class="mx-auto flex min-h-12 max-w-[1800px] items-center justify-between gap-4 border-t border-slate-200 px-3 py-2 text-xs text-slate-500 md:px-5"
 		>
-			<div class="truncate pr-2">{selectedServerBaseUrl(selectedServerId)}</div>
+			<div class="min-w-0 pr-2">
+				<div class="truncate text-[11px] tracking-[0.22em] text-slate-400 uppercase">
+					Selected server
+				</div>
+				<div class="mt-1 min-w-0 truncate text-sm text-slate-700">
+					<span class="font-semibold text-slate-900" title={selectedServerName(selectedServerId)}>
+						{selectedServerName(selectedServerId)}
+					</span>
+					<span class="px-1 text-slate-400">·</span>
+					<span class="font-mono" title={selectedServerBaseUrl(selectedServerId)}>
+						{selectedServerBaseUrl(selectedServerId)}
+					</span>
+				</div>
+			</div>
 			<div class="flex min-w-fit items-center gap-2">
 				<span>Checked: {lastCheckedValue(selectedServerId)}</span>
 				<button

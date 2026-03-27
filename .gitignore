@@ -18,6 +18,9 @@ Thumbs.db
 !.env.example
 !.env.test
 
+# Persistent app state
+/.opencode-hub/
+
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*

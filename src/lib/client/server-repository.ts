@@ -1,53 +1,51 @@
 import type { PersistedState } from '$lib/types';
 
-const STORAGE_KEY = 'opencode-hub.state.v1';
-
 const EMPTY_STATE: PersistedState = {
 	servers: [],
 	selectedServerId: null
 };
 
 export interface ServerRepository {
-	load(): PersistedState;
-	save(state: PersistedState): void;
+	load(): Promise<PersistedState>;
+	save(state: PersistedState): Promise<void>;
 }
 
-export class LocalStorageServerRepository implements ServerRepository {
-	load(): PersistedState {
-		if (typeof localStorage === 'undefined') {
-			return EMPTY_STATE;
-		}
+async function requestRegistryState(
+	method: 'GET' | 'PUT',
+	state?: PersistedState
+): Promise<unknown> {
+	const response = await fetch('/api/registry', {
+		method,
+		headers: method === 'PUT' ? { 'content-type': 'application/json' } : undefined,
+		body: method === 'PUT' && state ? JSON.stringify(state) : undefined
+	});
 
-		const raw = localStorage.getItem(STORAGE_KEY);
-		if (!raw) {
-			return EMPTY_STATE;
-		}
+	if (!response.ok) {
+		throw new Error(`Registry request failed (${response.status}).`);
+	}
 
+	return response.json();
+}
+
+export class RemoteServerRepository implements ServerRepository {
+	async load(): Promise<PersistedState> {
 		try {
-			const parsed = JSON.parse(raw);
-			if (typeof parsed !== 'object' || parsed === null) {
-				return EMPTY_STATE;
-			}
-
-			const state = parsed as PersistedState;
-			if (!Array.isArray(state.servers)) {
+			const payload = (await requestRegistryState('GET')) as Partial<PersistedState>;
+			if (!payload || !Array.isArray(payload.servers)) {
 				return EMPTY_STATE;
 			}
 
 			return {
-				servers: state.servers,
-				selectedServerId: typeof state.selectedServerId === 'string' ? state.selectedServerId : null
+				servers: payload.servers,
+				selectedServerId:
+					typeof payload.selectedServerId === 'string' ? payload.selectedServerId : null
 			};
 		} catch {
 			return EMPTY_STATE;
 		}
 	}
 
-	save(state: PersistedState): void {
-		if (typeof localStorage === 'undefined') {
-			return;
-		}
-
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	async save(state: PersistedState): Promise<void> {
+		await requestRegistryState('PUT', state);
 	}
 }

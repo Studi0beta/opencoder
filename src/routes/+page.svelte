@@ -5,27 +5,30 @@
 	import OpenCodeWebSetupGuide from '$lib/components/help/OpenCodeWebSetupGuide.svelte';
 	import ThemeEditor from '$lib/components/ThemeEditor.svelte';
 	import ThemedSurface from '$lib/components/ui/ThemedSurface.svelte';
-	import { buildServerExport, parseServerImport } from '$lib/client/server-transfer';
+	import { buildAppExport, parseAppImport } from '$lib/client/server-transfer';
 	import {
 		DEFAULT_THEME_PRESETS,
-		THEME_STORAGE_KEY,
 		buildThemeVariables,
 		type SavedThemePalette,
 		type ThemePalette
 	} from '$lib/theme';
 	import {
 		addServer,
-		importServers,
 		initializeServerRegistry,
 		registryState,
+		replaceRegistryState,
 		removeServer,
 		selectServer,
 		updateServer
 	} from '$lib/client/server-registry';
+	import { saveThemeState } from '$lib/client/theme-repository';
 	import type { OpencodeServer, PersistedState, ServerHealth, ServerInput } from '$lib/types';
+	import type { PageData } from './$types';
 
 	const POLL_INTERVAL_MS = 45000;
 	const REFRESH_DEBOUNCE_MS = 600;
+
+	let { data }: { data: PageData } = $props();
 
 	let formOpen = $state(false);
 	let formError = $state('');
@@ -90,33 +93,16 @@
 	let intervalId = 0;
 
 	onMount(() => {
-		if (browser) {
-			try {
-				const raw = localStorage.getItem(THEME_STORAGE_KEY);
-				if (raw) {
-					const parsed = JSON.parse(raw) as {
-						activePresetId: string | null;
-						activePalette: ThemePalette;
-						savedPalettes: SavedThemePalette[];
-					};
-					activeThemePresetId = parsed.activePresetId;
-					activePalette = parsed.activePalette;
-					savedPalettes = Array.isArray(parsed.savedPalettes) ? parsed.savedPalettes : [];
-				}
-			} catch {
-				activeThemePresetId = DEFAULT_THEME_PRESETS[0]?.id ?? null;
-				activePalette = DEFAULT_THEME_PRESETS[0]?.palette ?? activePalette;
-				savedPalettes = [];
-			}
-
-			applyTheme(activePalette);
-		}
+		registry = data.appState.registry;
+		activeThemePresetId = data.appState.theme.activeThemePresetId;
+		activePalette = data.appState.theme.activePalette;
+		savedPalettes = data.appState.theme.savedPalettes;
+		applyTheme(activePalette);
+		void initializeServerRegistry(data.appState.registry);
 
 		const unsubscribe = registryState.subscribe((nextState) => {
 			registry = nextState;
 		});
-
-		initializeServerRegistry();
 		void refreshHealth(true);
 
 		intervalId = window.setInterval(() => {
@@ -266,12 +252,17 @@
 
 		try {
 			const text = await file.text();
-			const entries = parseServerImport(text);
-			const result = importServers(entries);
-			transferNotice = `Imported ${result.added} server(s). Skipped ${result.skipped}.`;
-			if (result.errors.length > 0) {
-				transferNotice = `${transferNotice} ${result.errors[0]}`;
-			}
+			const imported = parseAppImport(text);
+			replaceRegistryState(imported.registry);
+			registry = imported.registry;
+			activeThemePresetId = imported.theme.activeThemePresetId;
+			activePalette = imported.theme.activePalette;
+			savedPalettes = imported.theme.savedPalettes;
+			applyTheme(activePalette);
+			void saveThemeState(imported.theme).catch(() => {
+				// The current browser stays updated; the next successful save will retry.
+			});
+			transferNotice = `Imported full app state with ${imported.registry.servers.length} server(s).`;
 			void refreshHealth(true);
 		} catch (error) {
 			transferNotice = error instanceof Error ? error.message : 'Import failed.';
@@ -279,15 +270,22 @@
 	}
 
 	function exportServers(): void {
-		const content = buildServerExport(servers);
+		const content = buildAppExport({
+			registry,
+			theme: {
+				activeThemePresetId,
+				activePalette,
+				savedPalettes
+			}
+		});
 		const blob = new Blob([content], { type: 'application/json' });
 		const url = URL.createObjectURL(blob);
 		const anchor = document.createElement('a');
 		anchor.href = url;
-		anchor.download = `opencode-hub-servers-${new Date().toISOString().slice(0, 10)}.json`;
+		anchor.download = `opencode-hub-state-${new Date().toISOString().slice(0, 10)}.json`;
 		anchor.click();
 		URL.revokeObjectURL(url);
-		transferNotice = `Exported ${servers.length} server(s).`;
+		transferNotice = `Exported full app state with ${servers.length} server(s).`;
 	}
 
 	function lastCheckedValue(id: string): string {
@@ -313,18 +311,13 @@
 	}
 
 	function persistTheme(): void {
-		if (!browser) {
-			return;
-		}
-
-		localStorage.setItem(
-			THEME_STORAGE_KEY,
-			JSON.stringify({
-				activePresetId: activeThemePresetId,
-				activePalette,
-				savedPalettes
-			})
-		);
+		void saveThemeState({
+			activeThemePresetId,
+			activePalette,
+			savedPalettes
+		}).catch(() => {
+			// The current browser stays updated; the next successful save will retry.
+		});
 	}
 
 	function applyTheme(palette: ThemePalette): void {

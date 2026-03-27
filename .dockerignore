@@ -8,5 +8,6 @@ npm-debug.log*
 .env
 .env.*
 !.env.example
+.opencode-hub
 Dockerfile.dev
 docker-compose.yml
