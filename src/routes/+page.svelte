@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import StatusDot from '$lib/components/StatusDot.svelte';
+	import OpenCodeWebSetupGuide from '$lib/components/help/OpenCodeWebSetupGuide.svelte';
 	import ThemeEditor from '$lib/components/ThemeEditor.svelte';
 	import { buildServerExport, parseServerImport } from '$lib/client/server-transfer';
 	import {
@@ -33,6 +34,7 @@
 	let formDescription = $state('');
 	let formHealthcheckUrl = $state('');
 	let deletingServerId = $state<string | null>(null);
+	let setupGuideOpen = $state(false);
 	let healthByServerId = $state<Record<string, ServerHealth | undefined>>({});
 	let isRefreshing = $state(false);
 	let lastRefreshAt = $state(0);
@@ -410,6 +412,23 @@
 		applyTheme(activePalette);
 		persistTheme();
 	}
+
+	function isRemoteBaseUrl(value: string): boolean {
+		const trimmed = value.trim();
+		if (!trimmed) {
+			return false;
+		}
+
+		try {
+			const parsed = new URL(trimmed);
+			if (!['http:', 'https:'].includes(parsed.protocol)) {
+				return false;
+			}
+			return !['localhost', '127.0.0.1', '::1'].includes(parsed.hostname.toLowerCase());
+		} catch {
+			return false;
+		}
+	}
 </script>
 
 <header
@@ -657,6 +676,24 @@
 				<p class="mt-1 text-sm text-slate-600">
 					Server URLs are normalized and validated before save.
 				</p>
+				<div
+					class="mt-3 flex items-center justify-between gap-3 rounded-xl border px-3 py-2"
+					style="border-color: var(--hub-border); background: var(--hub-surface);"
+				>
+					<p class="text-xs" style="color: var(--hub-muted);">
+						Need help setting up OpenCode Web on your server? View OpenCode Web setup instructions.
+					</p>
+					<button
+						type="button"
+						onclick={() => {
+							setupGuideOpen = true;
+						}}
+						class="rounded-lg px-3 py-2 text-xs font-medium transition hover:opacity-90"
+						style="background: var(--hub-brand); color: var(--hub-bg);"
+					>
+						View OpenCode Web setup instructions
+					</button>
+				</div>
 			</div>
 
 			<form class="space-y-4 px-6 py-5" onsubmit={submitServerForm}>
@@ -679,6 +716,12 @@
 							class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
 							placeholder="https://opencode.example.com"
 						/>
+						{#if isRemoteBaseUrl(formBaseUrl)}
+							<p class="text-xs" style="color: var(--hub-muted);">
+								Before adding a remote server, make sure OpenCode Web is running and protected with
+								a password.
+							</p>
+						{/if}
 					</label>
 				</div>
 
@@ -727,6 +770,13 @@
 		</div>
 	</div>
 {/if}
+
+<OpenCodeWebSetupGuide
+	open={setupGuideOpen}
+	onClose={() => {
+		setupGuideOpen = false;
+	}}
+/>
 
 {#if deletingServerId}
 	<div class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/45 px-4">
