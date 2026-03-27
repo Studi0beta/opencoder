@@ -1,4 +1,4 @@
-# Opencode Hub
+# Opencoder
 
 Opencode Hub is a SvelteKit app shell that centralizes access to multiple opencode servers. It provides:
 
