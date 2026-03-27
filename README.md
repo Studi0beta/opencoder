@@ -1,4 +1,4 @@
-# Opencode Hub
+# Opencoder
 
 <p align="center">
   <img src="static/logo.svg" alt="Opencoder logo" width="160" />
