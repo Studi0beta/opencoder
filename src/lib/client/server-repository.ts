@@ -14,7 +14,7 @@ async function requestRegistryState(
 	method: 'GET' | 'PUT',
 	state?: PersistedState
 ): Promise<unknown> {
-	const response = await fetch('/api/registry', {
+	const response = await window.fetch('/api/registry', {
 		method,
 		headers: method === 'PUT' ? { 'content-type': 'application/json' } : undefined,
 		body: method === 'PUT' && state ? JSON.stringify(state) : undefined

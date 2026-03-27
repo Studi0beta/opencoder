@@ -70,7 +70,7 @@ function selectedOrFirst(stateValue: PersistedState): string | null {
 }
 
 async function syncTargets(targets: SyncTarget[]): Promise<void> {
-	await fetch('/api/targets/sync', {
+	await window.fetch('/api/targets/sync', {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({ targets })

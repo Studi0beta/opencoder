@@ -4,7 +4,7 @@ async function requestThemeState(
 	method: 'GET' | 'PUT',
 	state?: PersistedThemeState
 ): Promise<unknown> {
-	const response = await fetch('/api/theme', {
+	const response = await window.fetch('/api/theme', {
 		method,
 		headers: method === 'PUT' ? { 'content-type': 'application/json' } : undefined,
 		body: method === 'PUT' && state ? JSON.stringify(state) : undefined

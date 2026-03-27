@@ -29,7 +29,7 @@ npm run dev
 
 Open `http://localhost:5173`.
 
-## Quick User Guide
+## Using Opencoder
 
 1. Start OpenCode Web on the machine you want to connect to.
 2. Add it in Opencoder with `Add server`.
@@ -104,7 +104,9 @@ PORT=3000
 
 See `docs/architecture.md` for embedding, proxying, health checks, persistence, security, and limitations.
 
-## OpenCode Web Setup
+## OpenCode Web Setup Guide
+
+Use this when you are configuring the OpenCode Web server itself, not when you are just using Opencoder.
 
 See `docs/setup-guide.md` for the setup instructions shown in the Add Server flow.
 

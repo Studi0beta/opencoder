@@ -134,7 +134,7 @@
 		try {
 			const checks = await Promise.all(
 				servers.map(async (server) => {
-					const response = await fetch(`/api/health/${server.id}`);
+					const response = await window.fetch(`/api/health/${server.id}`);
 					if (!response.ok) {
 						return {
 							id: server.id,
