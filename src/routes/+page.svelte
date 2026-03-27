@@ -62,7 +62,7 @@
 	);
 	const selectedHealth = $derived(selectedServer ? healthByServerId[selectedServer.id] : undefined);
 	const insecureEmbedTarget = $derived.by(() => {
-		if (!selectedServer || !data.isHttps) {
+		if (!selectedServer) {
 			return false;
 		}
 
