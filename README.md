@@ -17,6 +17,12 @@ Opencoder is best used as a local-first frontend for OpenCode Web servers. For r
 
 Server registry and theme state are stored server-side in `.opencode-hub/state.json` by default, so switching browsers restores the same saved state.
 
+## Import and Export
+
+- Export downloads the full Opencoder state: servers, selection, theme preset, custom palette, and saved palettes.
+- Import accepts the same full-state envelope and also supports older server-only exports.
+- This makes it easy to move your setup between browsers or hosts.
+
 ## Stack
 
 - SvelteKit + TypeScript

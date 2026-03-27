@@ -6,6 +6,8 @@ OpenCode Web must already be running on the target machine before you add the se
 
 This app is best used as a local-first frontend for your OpenCode Web servers. For remote access, prefer WireGuard or Tailscale rather than exposing the frontend directly to the public internet.
 
+Your Opencoder servers and theme state are saved on the app host, so the same setup appears when you switch browsers. Full-state import/export can move servers, selection, and theme settings between machines.
+
 ## Start OpenCode Web
 
 Recommended password-protected start:
