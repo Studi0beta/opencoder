@@ -112,6 +112,13 @@ export async function initializeServerRegistry(initialState?: PersistedState): P
 	queueSync();
 }
 
+export function replaceRegistryState(nextState: PersistedState): void {
+	persist({
+		servers: nextState.servers,
+		selectedServerId: selectedOrFirst(nextState)
+	});
+}
+
 export function addServer(input: ServerInput): OpencodeServer {
 	const current = get(state);
 	const nextServer = toServer(toServerInput(input));

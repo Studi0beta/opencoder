@@ -5,7 +5,7 @@
 	import OpenCodeWebSetupGuide from '$lib/components/help/OpenCodeWebSetupGuide.svelte';
 	import ThemeEditor from '$lib/components/ThemeEditor.svelte';
 	import ThemedSurface from '$lib/components/ui/ThemedSurface.svelte';
-	import { buildServerExport, parseServerImport } from '$lib/client/server-transfer';
+	import { buildAppExport, parseAppImport } from '$lib/client/server-transfer';
 	import {
 		DEFAULT_THEME_PRESETS,
 		buildThemeVariables,
@@ -14,9 +14,9 @@
 	} from '$lib/theme';
 	import {
 		addServer,
-		importServers,
 		initializeServerRegistry,
 		registryState,
+		replaceRegistryState,
 		removeServer,
 		selectServer,
 		updateServer
@@ -252,12 +252,17 @@
 
 		try {
 			const text = await file.text();
-			const entries = parseServerImport(text);
-			const result = importServers(entries);
-			transferNotice = `Imported ${result.added} server(s). Skipped ${result.skipped}.`;
-			if (result.errors.length > 0) {
-				transferNotice = `${transferNotice} ${result.errors[0]}`;
-			}
+			const imported = parseAppImport(text);
+			replaceRegistryState(imported.registry);
+			registry = imported.registry;
+			activeThemePresetId = imported.theme.activeThemePresetId;
+			activePalette = imported.theme.activePalette;
+			savedPalettes = imported.theme.savedPalettes;
+			applyTheme(activePalette);
+			void saveThemeState(imported.theme).catch(() => {
+				// The current browser stays updated; the next successful save will retry.
+			});
+			transferNotice = `Imported full app state with ${imported.registry.servers.length} server(s).`;
 			void refreshHealth(true);
 		} catch (error) {
 			transferNotice = error instanceof Error ? error.message : 'Import failed.';
@@ -265,15 +270,22 @@
 	}
 
 	function exportServers(): void {
-		const content = buildServerExport(servers);
+		const content = buildAppExport({
+			registry,
+			theme: {
+				activeThemePresetId,
+				activePalette,
+				savedPalettes
+			}
+		});
 		const blob = new Blob([content], { type: 'application/json' });
 		const url = URL.createObjectURL(blob);
 		const anchor = document.createElement('a');
 		anchor.href = url;
-		anchor.download = `opencode-hub-servers-${new Date().toISOString().slice(0, 10)}.json`;
+		anchor.download = `opencode-hub-state-${new Date().toISOString().slice(0, 10)}.json`;
 		anchor.click();
 		URL.revokeObjectURL(url);
-		transferNotice = `Exported ${servers.length} server(s).`;
+		transferNotice = `Exported full app state with ${servers.length} server(s).`;
 	}
 
 	function lastCheckedValue(id: string): string {

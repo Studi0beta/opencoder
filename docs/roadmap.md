@@ -68,3 +68,4 @@
 - [x] Standardize dialogs/help windows with shared themed shell
 - [x] Add top-bar help access and in-dialog section navigation
 - [x] Add local-first access guidance for WireGuard/Tailscale
+- [x] Export and import full app state

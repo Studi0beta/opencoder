@@ -41,6 +41,11 @@ Each server stores:
 - State is written to `.opencode-hub/state.json` by default.
 - `OPENCODE_HUB_STATE_FILE` can override the file path when needed.
 
+## Import and export
+
+- Exports include the full app state payload: registry plus theme state.
+- Imports accept the new app-state envelope and still tolerate older server-only files.
+
 ## Setup guide
 
 - The add-server flow includes a reusable OpenCode Web setup drawer.

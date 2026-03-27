@@ -11,7 +11,7 @@ Opencoder is a SvelteKit OpenCode Web server aggregator: a central place to regi
 - periodic health checks with online/offline/degraded states
 - direct iframe embedding when allowed
 - secure reverse-proxy embedding fallback when framing is blocked
-- import/export server lists as JSON
+- import/export full app state as JSON
 
 Opencoder is best used as a local-first frontend for OpenCode Web servers. For remote access, use WireGuard or Tailscale rather than exposing the app directly.
 
