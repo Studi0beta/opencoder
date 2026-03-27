@@ -84,19 +84,29 @@ See `ARCHITECTURE.md` for embedding, proxying, health checks, persistence, secur
 - Changelog template: `CHANGELOG.md`
 - Repo operations guide (branch protection + release tagging): `docs/REPO_OPERATIONS.md`
 
-## CI/CD (castanova-aligned)
+## CI/CD (GitHub Actions)
 
-This repo mirrors castanova conventions:
+- `.github/workflows/ci.yml` runs lint, typecheck, test, and build on pull requests and pushes to `main`.
+- `.github/workflows/cd.yml` builds and pushes Docker images on `main` and supports optional SSH deploy.
+- Image tags: `sha-<commit-sha>` and `latest`.
 
-- `.github/workflows/ci.yml` with `runs-on: castanova`, Node 20, lint/typecheck/test/build stages
-- `.github/workflows/cd.yml` with docker build+push and SSH deploy flow
-- image tags: `sha-<commit>` and `latest`
+### CD secrets
 
-Intentional differences from castanova:
+Set these in `Settings -> Secrets and variables -> Actions`:
 
-- no database/bootstrap steps
-- app-specific env vars (`OPENCODE_HUB_PROXY_SECRET`, `ALLOW_PRIVATE_NETWORK_TARGETS`)
-- tests are Vitest unit tests only
+- Optional registry override:
+  - `REGISTRY_HOST` (defaults to `ghcr.io`)
+  - `REGISTRY_IMAGE` (defaults to `<owner>/<repo>`)
+- Required only for non-GHCR registries or remote deploy login:
+  - `REGISTRY_USERNAME`
+  - `REGISTRY_PASSWORD`
+- Required for deploy job:
+  - `DEPLOY_HOST`
+  - `DEPLOY_USER`
+  - `DEPLOY_SSH_KEY`
+  - `DEPLOY_PATH`
+
+If deploy secrets are not set, image publish still runs and deploy is skipped.
 
 ## WebSocket note
 

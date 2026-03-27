@@ -1,8 +1,8 @@
 # Repository Operations
 
-## Branch protection (Codeberg)
+## Branch protection (GitHub)
 
-Configure these rules in repository settings for `main`:
+Configure these rules in `Settings -> Branches` for `main`:
 
 1. Require pull requests before merge.
 2. Require up-to-date branch before merge.
