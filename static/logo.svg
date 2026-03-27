@@ -1,0 +1,66 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+  <defs>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(512 520) rotate(90) scale(260 260)">
+      <stop offset="0%" stop-color="#ffd45a" stop-opacity="0.55"/>
+      <stop offset="65%" stop-color="#ff7a00" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ff4b00" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="flameMain" x1="512" y1="250" x2="512" y2="590" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fff59d"/>
+      <stop offset="45%" stop-color="#ffb300"/>
+      <stop offset="100%" stop-color="#ff5a00"/>
+    </linearGradient>
+    <linearGradient id="flameEdge" x1="512" y1="300" x2="512" y2="610" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ff7a00"/>
+      <stop offset="100%" stop-color="#d92d00"/>
+    </linearGradient>
+    <linearGradient id="keyboard" x1="272" y1="640" x2="752" y2="820" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f5f7fa"/>
+      <stop offset="100%" stop-color="#d2d7de"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="transparent"/>
+  <ellipse cx="512" cy="540" rx="250" ry="180" fill="url(#glow)"/>
+
+  <path d="M512 244C560 294 590 348 588 410C620 388 648 354 664 308C701 353 720 405 720 458C720 540 669 600 597 626C563 638 538 644 512 644C486 644 461 638 427 626C355 600 304 540 304 458C304 405 323 353 360 308C376 354 404 388 436 410C434 348 464 294 512 244Z" fill="url(#flameEdge)"/>
+  <path d="M512 278C544 318 560 358 560 401C586 387 607 364 620 335C640 367 650 401 650 438C650 497 615 541 565 560C544 568 528 572 512 572C496 572 480 568 459 560C409 541 374 497 374 438C374 401 384 367 404 335C417 364 438 387 464 401C464 358 480 318 512 278Z" fill="url(#flameMain)"/>
+  <path d="M378 438C385 405 401 376 425 353C430 379 443 401 461 418C431 425 403 430 378 438Z" fill="#ff7a00"/>
+  <path d="M648 438C641 405 625 376 601 353C596 379 583 401 565 418C595 425 623 430 648 438Z" fill="#ff8a00"/>
+  <path d="M463 326C476 345 482 365 482 387C468 382 455 371 446 356C451 346 457 335 463 326Z" fill="#fff4b0"/>
+  <path d="M561 326C548 345 542 365 542 387C556 382 569 371 578 356C573 346 567 335 561 326Z" fill="#fff4b0"/>
+
+  <g>
+    <rect x="254" y="626" width="516" height="174" rx="30" fill="#cfd4db"/>
+    <rect x="270" y="642" width="484" height="142" rx="24" fill="url(#keyboard)"/>
+    <rect x="292" y="662" width="56" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="356" y="662" width="56" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="420" y="662" width="56" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="484" y="662" width="56" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="548" y="662" width="56" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="612" y="662" width="56" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="676" y="662" width="56" height="22" rx="5" fill="#f9fafb"/>
+
+    <rect x="292" y="696" width="36" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="336" y="696" width="36" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="380" y="696" width="36" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="424" y="696" width="36" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="468" y="696" width="36" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="512" y="696" width="36" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="556" y="696" width="36" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="600" y="696" width="36" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="644" y="696" width="36" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="688" y="696" width="36" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="732" y="696" width="24" height="22" rx="5" fill="#f9fafb"/>
+
+    <rect x="292" y="730" width="92" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="392" y="730" width="92" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="492" y="730" width="92" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="592" y="730" width="58" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="658" y="730" width="36" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="702" y="730" width="54" height="22" rx="5" fill="#f9fafb"/>
+
+    <rect x="292" y="764" width="378" height="22" rx="5" fill="#f9fafb"/>
+    <rect x="678" y="764" width="80" height="22" rx="5" fill="#f9fafb"/>
+  </g>
+</svg>

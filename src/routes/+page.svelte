@@ -2,7 +2,15 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import StatusDot from '$lib/components/StatusDot.svelte';
+	import ThemeEditor from '$lib/components/ThemeEditor.svelte';
 	import { buildServerExport, parseServerImport } from '$lib/client/server-transfer';
+	import {
+		DEFAULT_THEME_PRESETS,
+		THEME_STORAGE_KEY,
+		buildThemeVariables,
+		type SavedThemePalette,
+		type ThemePalette
+	} from '$lib/theme';
 	import {
 		addServer,
 		importServers,
@@ -31,6 +39,15 @@
 	let registry = $state<PersistedState>({ servers: [], selectedServerId: null });
 	let transferNotice = $state('');
 	let importInput = $state<HTMLInputElement | null>(null);
+	let activeThemePresetId = $state<string | null>(DEFAULT_THEME_PRESETS[0]?.id ?? null);
+	let activePalette = $state<ThemePalette>(
+		DEFAULT_THEME_PRESETS[0]?.palette ?? {
+			background: '#0b1020',
+			text: '#e5ecff',
+			brand: '#22c55e'
+		}
+	);
+	let savedPalettes = $state<SavedThemePalette[]>([]);
 
 	const servers = $derived(registry.servers);
 	const selectedServerId = $derived(registry.selectedServerId);
@@ -70,6 +87,28 @@
 	let intervalId = 0;
 
 	onMount(() => {
+		if (browser) {
+			try {
+				const raw = localStorage.getItem(THEME_STORAGE_KEY);
+				if (raw) {
+					const parsed = JSON.parse(raw) as {
+						activePresetId: string | null;
+						activePalette: ThemePalette;
+						savedPalettes: SavedThemePalette[];
+					};
+					activeThemePresetId = parsed.activePresetId;
+					activePalette = parsed.activePalette;
+					savedPalettes = Array.isArray(parsed.savedPalettes) ? parsed.savedPalettes : [];
+				}
+			} catch {
+				activeThemePresetId = DEFAULT_THEME_PRESETS[0]?.id ?? null;
+				activePalette = DEFAULT_THEME_PRESETS[0]?.palette ?? activePalette;
+				savedPalettes = [];
+			}
+
+			applyTheme(activePalette);
+		}
+
 		const unsubscribe = registryState.subscribe((nextState) => {
 			registry = nextState;
 		});
@@ -275,20 +314,127 @@
 			closeForm();
 		}
 	}
+
+	function persistTheme(): void {
+		if (!browser) {
+			return;
+		}
+
+		localStorage.setItem(
+			THEME_STORAGE_KEY,
+			JSON.stringify({
+				activePresetId: activeThemePresetId,
+				activePalette,
+				savedPalettes
+			})
+		);
+	}
+
+	function applyTheme(palette: ThemePalette): void {
+		if (!browser) {
+			return;
+		}
+
+		const vars = buildThemeVariables(palette);
+		for (const [key, value] of Object.entries(vars)) {
+			document.documentElement.style.setProperty(key, value);
+		}
+	}
+
+	function handleApplyThemePreset(id: string): void {
+		const preset = DEFAULT_THEME_PRESETS.find((item) => item.id === id);
+		if (!preset) {
+			return;
+		}
+
+		activeThemePresetId = id;
+		activePalette = preset.palette;
+		applyTheme(activePalette);
+		persistTheme();
+	}
+
+	function handlePreviewThemePalette(palette: ThemePalette): void {
+		activeThemePresetId = null;
+		activePalette = palette;
+		applyTheme(activePalette);
+		persistTheme();
+	}
+
+	function handleSaveThemePalette(name: string, palette: ThemePalette): void {
+		const cleanName = name.trim() || `Scheme ${savedPalettes.length + 1}`;
+		savedPalettes = [
+			{
+				id: crypto.randomUUID(),
+				name: cleanName,
+				createdAt: new Date().toISOString(),
+				...palette
+			},
+			...savedPalettes
+		].slice(0, 20);
+
+		activeThemePresetId = null;
+		activePalette = palette;
+		applyTheme(activePalette);
+		persistTheme();
+	}
+
+	function handleApplySavedThemePalette(id: string): void {
+		const saved = savedPalettes.find((item) => item.id === id);
+		if (!saved) {
+			return;
+		}
+
+		activeThemePresetId = null;
+		activePalette = {
+			background: saved.background,
+			text: saved.text,
+			brand: saved.brand
+		};
+		applyTheme(activePalette);
+		persistTheme();
+	}
+
+	function handleDeleteSavedThemePalette(id: string): void {
+		savedPalettes = savedPalettes.filter((item) => item.id !== id);
+		persistTheme();
+	}
+
+	function handleResetTheme(): void {
+		const fallback = DEFAULT_THEME_PRESETS[0];
+		if (!fallback) {
+			return;
+		}
+
+		activeThemePresetId = fallback.id;
+		activePalette = fallback.palette;
+		applyTheme(activePalette);
+		persistTheme();
+	}
 </script>
 
-<header class="fixed inset-x-0 top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
+<header
+	class="fixed inset-x-0 top-0 z-20 border-b backdrop-blur"
+	style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-surface) 88%, transparent);"
+>
 	<div class="mx-auto flex h-16 max-w-[1800px] items-center gap-3 px-3 md:px-5">
 		<div class="mr-2 min-w-fit">
-			<h1 class="text-sm font-semibold tracking-wide text-slate-900 md:text-base">Opencode Hub</h1>
+			<div class="flex items-center gap-2">
+				<img src="/logo.svg" alt="" class="h-8 w-8 rounded-md object-contain" />
+				<h1
+					class="text-sm font-semibold tracking-wide md:text-base"
+					style="color: var(--hub-text);"
+				>
+					Opencoder
+				</h1>
+			</div>
 		</div>
 
 		<div class="min-w-0 flex-1 overflow-x-auto [scrollbar-width:thin]">
 			<div class="flex min-w-max items-center gap-2 py-1">
 				{#if servers.length === 0}
 					<span
-						class="rounded-md border border-dashed border-slate-300 px-3 py-1.5 text-xs text-slate-500"
-						>No servers yet</span
+						class="rounded-md border border-dashed px-3 py-1.5 text-xs"
+						style="border-color: var(--hub-border); color: var(--hub-muted);">No servers yet</span
 					>
 				{:else}
 					{#each servers as server (server.id)}
@@ -296,11 +442,10 @@
 						<button
 							type="button"
 							onclick={() => selectServer(server.id)}
-							class={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition focus:ring-2 focus:ring-slate-300 focus:outline-none ${
-								selected
-									? 'border-slate-900 bg-slate-900 text-white shadow-sm'
-									: 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'
+							class={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition focus:ring-2 focus:outline-none ${
+								selected ? 'shadow-sm' : 'hover:opacity-90'
 							}`}
+							style={`border-color: ${selected ? 'var(--hub-brand)' : 'var(--hub-border)'}; background: ${selected ? 'var(--hub-brand)' : 'var(--hub-surface)'}; color: ${selected ? 'var(--hub-bg)' : 'var(--hub-text)'};`}
 							aria-pressed={selected}
 						>
 							<StatusDot state={healthByServerId[server.id]?.state ?? 'unknown'} />
@@ -312,17 +457,31 @@
 		</div>
 
 		<div class="flex items-center gap-2">
+			<ThemeEditor
+				presets={DEFAULT_THEME_PRESETS}
+				activePresetId={activeThemePresetId}
+				{activePalette}
+				{savedPalettes}
+				onApplyPreset={handleApplyThemePreset}
+				onPreviewPalette={handlePreviewThemePalette}
+				onSavePalette={handleSaveThemePalette}
+				onApplySavedPalette={handleApplySavedThemePalette}
+				onDeleteSavedPalette={handleDeleteSavedThemePalette}
+				onReset={handleResetTheme}
+			/>
 			<button
 				type="button"
 				onclick={triggerImport}
-				class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-700 transition hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 focus:outline-none"
+				class="rounded-lg border px-3 py-1.5 text-xs transition hover:opacity-90 focus:ring-2 focus:outline-none"
+				style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface);"
 			>
 				Import
 			</button>
 			<button
 				type="button"
 				onclick={exportServers}
-				class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-700 transition hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 focus:outline-none"
+				class="rounded-lg border px-3 py-1.5 text-xs transition hover:opacity-90 focus:ring-2 focus:outline-none"
+				style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface);"
 			>
 				Export
 			</button>
@@ -331,14 +490,16 @@
 				onclick={() => {
 					void refreshHealth(true);
 				}}
-				class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-700 transition hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 focus:outline-none"
+				class="rounded-lg border px-3 py-1.5 text-xs transition hover:opacity-90 focus:ring-2 focus:outline-none"
+				style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface);"
 			>
 				Refresh
 			</button>
 			<button
 				type="button"
 				onclick={openAddServer}
-				class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-slate-700 focus:ring-2 focus:ring-slate-300 focus:outline-none"
+				class="rounded-lg px-3 py-1.5 text-xs font-medium transition hover:opacity-90 focus:ring-2 focus:outline-none"
+				style="background: var(--hub-brand); color: var(--hub-bg);"
 			>
 				Add server
 			</button>
@@ -347,14 +508,16 @@
 
 	{#if selectedServerId}
 		<div
-			class="mx-auto flex h-8 max-w-[1800px] items-center justify-between border-t border-slate-200 px-3 text-[11px] text-slate-500 md:px-5"
+			class="mx-auto flex h-8 max-w-[1800px] items-center justify-between border-t px-3 text-[11px] md:px-5"
+			style="border-color: var(--hub-border); color: var(--hub-muted);"
 		>
 			<div class="truncate pr-2">{selectedServerBaseUrl(selectedServerId)}</div>
 			<div class="flex min-w-fit items-center gap-2">
 				<span>Checked: {lastCheckedValue(selectedServerId)}</span>
 				<button
 					type="button"
-					class="text-slate-600 hover:text-slate-900"
+					class="transition hover:opacity-85"
+					style="color: var(--hub-text);"
 					onclick={() => openEditServer(selectedServerId)}>Edit</button
 				>
 				<button
@@ -376,21 +539,25 @@
 />
 
 <main class="pt-24 md:pt-24">
-	<div class="h-[calc(100vh-6rem)] px-3 pb-3 md:px-5">
+	<div class="h-[calc(100vh-6rem)] w-full">
 		{#if !selectedServer}
 			<section
-				class="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/75 p-10 text-center"
+				class="flex h-full items-center justify-center rounded-xl border border-dashed p-10 text-center"
+				style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-surface) 84%, transparent);"
 			>
 				<div class="max-w-lg space-y-3">
-					<h2 class="text-2xl font-semibold text-slate-900">Add your first opencode server</h2>
-					<p class="text-sm text-slate-600">
+					<h2 class="text-2xl font-semibold" style="color: var(--hub-text);">
+						Add your first opencode server
+					</h2>
+					<p class="text-sm" style="color: var(--hub-muted);">
 						Save one or more server endpoints in the top bar, then switch instantly between them.
 					</p>
 					<button
 						type="button"
 						onmousedown={openAddServer}
 						onclick={openAddServer}
-						class="rounded-lg bg-slate-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+						class="rounded-lg px-5 py-2 text-sm font-medium transition hover:opacity-90"
+						style="background: var(--hub-brand); color: var(--hub-bg);"
 					>
 						Add server
 					</button>
@@ -398,26 +565,34 @@
 			</section>
 		{:else}
 			<section
-				class="flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+				class="flex h-full w-full flex-col overflow-hidden border"
+				style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-surface) 96%, white);"
 			>
 				{#if transferNotice}
-					<div class="border-b border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
+					<div
+						class="border-b px-4 py-2 text-xs"
+						style="border-color: var(--hub-border); background: var(--hub-surface-2); color: var(--hub-muted);"
+					>
 						{transferNotice}
 					</div>
 				{/if}
 				<div
-					class="flex items-center justify-between border-b border-slate-200 px-4 py-2 text-xs text-slate-500"
+					class="flex items-center justify-between border-b px-4 py-2 text-xs"
+					style="border-color: var(--hub-border); color: var(--hub-muted);"
 				>
 					<div class="truncate pr-2">
 						{#if selectedHealth}
-							<span class="font-medium text-slate-700">{selectedHealth.state}</span>
+							<span class="font-medium" style="color: var(--hub-text);">{selectedHealth.state}</span
+							>
 							- {selectedHealth.message}
 						{:else}
 							Pending first health check...
 						{/if}
 					</div>
 					<div class="min-w-fit">
-						mode: <span class="font-medium text-slate-700">{selectedEmbedMode}</span>
+						mode: <span class="font-medium" style="color: var(--hub-text);"
+							>{selectedEmbedMode}</span
+						>
 					</div>
 				</div>
 				{#if selectedEmbedMode === 'proxy'}
@@ -431,8 +606,8 @@
 						<div
 							class="max-w-xl rounded-lg border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900"
 						>
-							This server points to the current Opencode Hub origin. Self-embedding is blocked to
-							avoid nested recursive UIs.
+							This server points to the current Opencoder origin. Self-embedding is blocked to avoid
+							nested recursive UIs.
 						</div>
 					</div>
 				{:else if selectedEmbedUrl}
@@ -440,20 +615,23 @@
 						title={`Embedded ${selectedServer.name}`}
 						src={selectedEmbedUrl}
 						class="h-full w-full flex-1"
+						style="background: var(--hub-bg); border-top: 1px solid var(--hub-border); border-bottom: 1px solid var(--hub-border);"
 						referrerpolicy="no-referrer"
 						sandbox="allow-forms allow-modals allow-popups allow-same-origin allow-scripts allow-downloads"
 					></iframe>
 				{/if}
 
 				<div
-					class="flex items-center justify-between border-t border-slate-200 px-4 py-2 text-xs text-slate-500"
+					class="flex items-center justify-between border-t px-4 py-2 text-xs"
+					style="border-color: var(--hub-border); color: var(--hub-muted);"
 				>
 					<span>If embedding fails, open the remote UI directly.</span>
 					<a
 						href={selectedServer.baseUrl}
 						target="_blank"
 						rel="external noreferrer noopener"
-						class="font-medium text-slate-700 hover:text-slate-900"
+						class="font-medium hover:opacity-90"
+						style="color: var(--hub-text);"
 					>
 						Open in new tab
 					</a>

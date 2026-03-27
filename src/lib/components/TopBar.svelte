@@ -41,7 +41,10 @@
 <header class="fixed inset-x-0 top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
 	<div class="mx-auto flex h-16 max-w-[1800px] items-center gap-3 px-3 md:px-5">
 		<div class="mr-2 min-w-fit">
-			<h1 class="text-sm font-semibold tracking-wide text-slate-900 md:text-base">Opencode Hub</h1>
+			<div class="flex items-center gap-2">
+				<img src="/logo.svg" alt="" class="h-8 w-8 rounded-md object-contain" />
+				<h1 class="text-sm font-semibold tracking-wide text-slate-900 md:text-base">Opencoder</h1>
+			</div>
 		</div>
 
 		<div class="min-w-0 flex-1 overflow-x-auto [scrollbar-width:thin]">
