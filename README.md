@@ -38,6 +38,8 @@ Open `http://localhost:5173`.
 5. Use `Edit`, `Delete`, `Import`, or `Export` as needed.
 6. Click `Help` for the full setup steps.
 
+Preset themes include `night-operator`, `graph-paper`, `sandstone`, `nordic-frost`, `graphite-glow`, `gruvbox-material-dark`, `nord`, `catppuccin`, and `tokyo-night-storm`.
+
 ## Import and Export
 
 - Export downloads the full Opencoder state: servers, selection, theme preset, custom palette, and saved palettes.

@@ -81,6 +81,42 @@ export const DEFAULT_THEME_PRESETS: ThemePreset[] = [
 			text: '#e2e8f0',
 			brand: '#38bdf8'
 		}
+	},
+	{
+		id: 'gruvbox-material-dark',
+		label: 'Gruvbox Material Dark',
+		palette: {
+			background: '#282828',
+			text: '#ebdbb2',
+			brand: '#fabd2f'
+		}
+	},
+	{
+		id: 'nord',
+		label: 'Nord',
+		palette: {
+			background: '#2e3440',
+			text: '#eceff4',
+			brand: '#88c0d0'
+		}
+	},
+	{
+		id: 'catppuccin',
+		label: 'Catppuccin',
+		palette: {
+			background: '#1e1e28',
+			text: '#e0def4',
+			brand: '#f5c2e7'
+		}
+	},
+	{
+		id: 'tokyo-night-storm',
+		label: 'Tokyo Night Storm',
+		palette: {
+			background: '#24283b',
+			text: '#c0caf5',
+			brand: '#7aa2f7'
+		}
 	}
 ];
 

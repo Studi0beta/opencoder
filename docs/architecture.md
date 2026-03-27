@@ -57,3 +57,4 @@ Each server stores:
 ## Theme editor
 
 - The theme editor supports direct color input and screen color picking via the browser EyeDropper API.
+- Preset themes include Night Operator, Graph Paper, Sandstone, Nordic Frost, Graphite Glow, Gruvbox Material Dark, Nord, Catppuccin, and Tokyo Night Storm.
