@@ -84,8 +84,8 @@ export async function loadAppState(): Promise<PersistedAppState> {
 
 export async function saveAppState(state: PersistedAppState): Promise<void> {
 	cachedState = normalizeAppState(state);
-	await ensureStateDir();
 	try {
+		await ensureStateDir();
 		await writeFile(STATE_FILE, `${JSON.stringify(cachedState, null, 2)}\n`, 'utf8');
 	} catch {
 		// Fall back to in-memory state if the filesystem is not writable.
