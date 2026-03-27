@@ -1,0 +1,578 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
+	import StatusDot from '$lib/components/StatusDot.svelte';
+	import { buildServerExport, parseServerImport } from '$lib/client/server-transfer';
+	import {
+		addServer,
+		importServers,
+		initializeServerRegistry,
+		registryState,
+		removeServer,
+		selectServer,
+		updateServer
+	} from '$lib/client/server-registry';
+	import type { OpencodeServer, PersistedState, ServerHealth, ServerInput } from '$lib/types';
+
+	const POLL_INTERVAL_MS = 45000;
+	const REFRESH_DEBOUNCE_MS = 600;
+
+	let formOpen = $state(false);
+	let formError = $state('');
+	let editingServer = $state<OpencodeServer | null>(null);
+	let formName = $state('');
+	let formBaseUrl = $state('');
+	let formDescription = $state('');
+	let formHealthcheckUrl = $state('');
+	let deletingServerId = $state<string | null>(null);
+	let healthByServerId = $state<Record<string, ServerHealth | undefined>>({});
+	let isRefreshing = $state(false);
+	let lastRefreshAt = $state(0);
+	let registry = $state<PersistedState>({ servers: [], selectedServerId: null });
+	let transferNotice = $state('');
+	let importInput = $state<HTMLInputElement | null>(null);
+
+	const servers = $derived(registry.servers);
+	const selectedServerId = $derived(registry.selectedServerId);
+	const selectedServer = $derived(
+		registry.servers.find((server) => server.id === registry.selectedServerId) ?? null
+	);
+	const selectedHealth = $derived(selectedServer ? healthByServerId[selectedServer.id] : undefined);
+	const selectedEmbedMode = $derived(selectedHealth?.recommendedMode ?? 'direct');
+	const selfEmbeddingBlocked = $derived.by(() => {
+		if (!browser || !selectedServer) {
+			return false;
+		}
+
+		try {
+			const target = new URL(selectedServer.baseUrl, window.location.origin);
+			return target.origin === window.location.origin;
+		} catch {
+			return false;
+		}
+	});
+	const selectedEmbedUrl = $derived.by(() => {
+		if (!selectedServer) {
+			return null;
+		}
+
+		if (selfEmbeddingBlocked) {
+			return null;
+		}
+
+		if (selectedEmbedMode === 'proxy') {
+			return `/api/proxy/${selectedServer.id}/`;
+		}
+
+		return selectedServer.baseUrl;
+	});
+
+	let intervalId = 0;
+
+	onMount(() => {
+		const unsubscribe = registryState.subscribe((nextState) => {
+			registry = nextState;
+		});
+
+		initializeServerRegistry();
+		void refreshHealth(true);
+
+		intervalId = window.setInterval(() => {
+			void refreshHealth(false);
+		}, POLL_INTERVAL_MS);
+
+		return () => {
+			unsubscribe();
+			window.clearInterval(intervalId);
+		};
+	});
+
+	async function refreshHealth(force: boolean): Promise<void> {
+		if (isRefreshing) {
+			return;
+		}
+
+		const now = Date.now();
+		if (!force && now - lastRefreshAt < REFRESH_DEBOUNCE_MS) {
+			return;
+		}
+
+		if (servers.length === 0) {
+			lastRefreshAt = now;
+			return;
+		}
+
+		isRefreshing = true;
+		try {
+			const checks = await Promise.all(
+				servers.map(async (server) => {
+					const response = await fetch(`/api/health/${server.id}`);
+					if (!response.ok) {
+						return {
+							id: server.id,
+							health: {
+								state: 'offline',
+								message: `Health check failed (${response.status}).`,
+								lastCheckedAt: new Date().toISOString(),
+								directEmbeddable: false,
+								recommendedMode: 'proxy'
+							} satisfies ServerHealth
+						};
+					}
+
+					const payload = (await response.json()) as ServerHealth;
+					return { id: server.id, health: payload };
+				})
+			);
+
+			healthByServerId = Object.fromEntries(checks.map((item) => [item.id, item.health]));
+		} catch {
+			healthByServerId = Object.fromEntries(
+				servers.map((server) => [
+					server.id,
+					{
+						state: 'offline',
+						message: 'Health polling failed.',
+						lastCheckedAt: new Date().toISOString(),
+						directEmbeddable: false,
+						recommendedMode: 'proxy'
+					} satisfies ServerHealth
+				])
+			);
+		} finally {
+			lastRefreshAt = now;
+			isRefreshing = false;
+		}
+	}
+
+	function openAddServer(): void {
+		editingServer = null;
+		formError = '';
+		formName = '';
+		formBaseUrl = '';
+		formDescription = '';
+		formHealthcheckUrl = '';
+		formOpen = true;
+	}
+
+	function openEditServer(id: string): void {
+		const server = servers.find((item) => item.id === id);
+		if (!server) {
+			return;
+		}
+
+		editingServer = server;
+		formError = '';
+		formName = server.name;
+		formBaseUrl = server.baseUrl;
+		formDescription = server.description ?? '';
+		formHealthcheckUrl = server.healthcheckUrl ?? '';
+		formOpen = true;
+	}
+
+	function closeForm(): void {
+		formOpen = false;
+		formError = '';
+		editingServer = null;
+	}
+
+	function saveServer(input: ServerInput, editingId: string | null): void {
+		try {
+			if (editingId) {
+				updateServer(editingId, input);
+			} else {
+				addServer(input);
+			}
+
+			closeForm();
+			void refreshHealth(true);
+		} catch (error) {
+			formError = error instanceof Error ? error.message : 'Could not save server.';
+		}
+	}
+
+	function confirmDeleteServer(id: string): void {
+		deletingServerId = id;
+	}
+
+	function deleteServerConfirmed(): void {
+		if (!deletingServerId) {
+			return;
+		}
+
+		removeServer(deletingServerId);
+		deletingServerId = null;
+		void refreshHealth(true);
+	}
+
+	function cancelDelete(): void {
+		deletingServerId = null;
+	}
+
+	function triggerImport(): void {
+		importInput?.click();
+	}
+
+	async function onImportFile(event: Event): Promise<void> {
+		const target = event.currentTarget as HTMLInputElement;
+		const file = target.files?.[0];
+		target.value = '';
+
+		if (!file) {
+			return;
+		}
+
+		try {
+			const text = await file.text();
+			const entries = parseServerImport(text);
+			const result = importServers(entries);
+			transferNotice = `Imported ${result.added} server(s). Skipped ${result.skipped}.`;
+			if (result.errors.length > 0) {
+				transferNotice = `${transferNotice} ${result.errors[0]}`;
+			}
+			void refreshHealth(true);
+		} catch (error) {
+			transferNotice = error instanceof Error ? error.message : 'Import failed.';
+		}
+	}
+
+	function exportServers(): void {
+		const content = buildServerExport(servers);
+		const blob = new Blob([content], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const anchor = document.createElement('a');
+		anchor.href = url;
+		anchor.download = `opencode-hub-servers-${new Date().toISOString().slice(0, 10)}.json`;
+		anchor.click();
+		URL.revokeObjectURL(url);
+		transferNotice = `Exported ${servers.length} server(s).`;
+	}
+
+	function lastCheckedValue(id: string): string {
+		const checked = healthByServerId[id]?.lastCheckedAt;
+		return checked ? new Date(checked).toLocaleTimeString() : 'Never';
+	}
+
+	function selectedServerBaseUrl(id: string): string {
+		return servers.find((item) => item.id === id)?.baseUrl ?? '';
+	}
+
+	function submitServerForm(event: SubmitEvent): void {
+		event.preventDefault();
+		saveServer(
+			{
+				name: formName,
+				baseUrl: formBaseUrl,
+				description: formDescription,
+				healthcheckUrl: formHealthcheckUrl
+			},
+			editingServer?.id ?? null
+		);
+	}
+
+	function onFormEscape(event: KeyboardEvent): void {
+		if (event.key === 'Escape') {
+			closeForm();
+		}
+	}
+</script>
+
+<header class="fixed inset-x-0 top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
+	<div class="mx-auto flex h-16 max-w-[1800px] items-center gap-3 px-3 md:px-5">
+		<div class="mr-2 min-w-fit">
+			<h1 class="text-sm font-semibold tracking-wide text-slate-900 md:text-base">Opencode Hub</h1>
+		</div>
+
+		<div class="min-w-0 flex-1 overflow-x-auto [scrollbar-width:thin]">
+			<div class="flex min-w-max items-center gap-2 py-1">
+				{#if servers.length === 0}
+					<span
+						class="rounded-md border border-dashed border-slate-300 px-3 py-1.5 text-xs text-slate-500"
+						>No servers yet</span
+					>
+				{:else}
+					{#each servers as server (server.id)}
+						{@const selected = selectedServerId === server.id}
+						<button
+							type="button"
+							onclick={() => selectServer(server.id)}
+							class={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition focus:ring-2 focus:ring-slate-300 focus:outline-none ${
+								selected
+									? 'border-slate-900 bg-slate-900 text-white shadow-sm'
+									: 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50'
+							}`}
+							aria-pressed={selected}
+						>
+							<StatusDot state={healthByServerId[server.id]?.state ?? 'unknown'} />
+							<span class="max-w-40 truncate font-medium">{server.name}</span>
+						</button>
+					{/each}
+				{/if}
+			</div>
+		</div>
+
+		<div class="flex items-center gap-2">
+			<button
+				type="button"
+				onclick={triggerImport}
+				class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-700 transition hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 focus:outline-none"
+			>
+				Import
+			</button>
+			<button
+				type="button"
+				onclick={exportServers}
+				class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-700 transition hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 focus:outline-none"
+			>
+				Export
+			</button>
+			<button
+				type="button"
+				onclick={() => {
+					void refreshHealth(true);
+				}}
+				class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-700 transition hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 focus:outline-none"
+			>
+				Refresh
+			</button>
+			<button
+				type="button"
+				onclick={openAddServer}
+				class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-slate-700 focus:ring-2 focus:ring-slate-300 focus:outline-none"
+			>
+				Add server
+			</button>
+		</div>
+	</div>
+
+	{#if selectedServerId}
+		<div
+			class="mx-auto flex h-8 max-w-[1800px] items-center justify-between border-t border-slate-200 px-3 text-[11px] text-slate-500 md:px-5"
+		>
+			<div class="truncate pr-2">{selectedServerBaseUrl(selectedServerId)}</div>
+			<div class="flex min-w-fit items-center gap-2">
+				<span>Checked: {lastCheckedValue(selectedServerId)}</span>
+				<button
+					type="button"
+					class="text-slate-600 hover:text-slate-900"
+					onclick={() => openEditServer(selectedServerId)}>Edit</button
+				>
+				<button
+					type="button"
+					class="text-rose-700 hover:text-rose-900"
+					onclick={() => confirmDeleteServer(selectedServerId)}>Delete</button
+				>
+			</div>
+		</div>
+	{/if}
+</header>
+
+<input
+	bind:this={importInput}
+	type="file"
+	accept="application/json"
+	class="hidden"
+	onchange={onImportFile}
+/>
+
+<main class="pt-24 md:pt-24">
+	<div class="h-[calc(100vh-6rem)] px-3 pb-3 md:px-5">
+		{#if !selectedServer}
+			<section
+				class="flex h-full items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/75 p-10 text-center"
+			>
+				<div class="max-w-lg space-y-3">
+					<h2 class="text-2xl font-semibold text-slate-900">Add your first opencode server</h2>
+					<p class="text-sm text-slate-600">
+						Save one or more server endpoints in the top bar, then switch instantly between them.
+					</p>
+					<button
+						type="button"
+						onmousedown={openAddServer}
+						onclick={openAddServer}
+						class="rounded-lg bg-slate-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+					>
+						Add server
+					</button>
+				</div>
+			</section>
+		{:else}
+			<section
+				class="flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+			>
+				{#if transferNotice}
+					<div class="border-b border-slate-200 bg-slate-50 px-4 py-2 text-xs text-slate-600">
+						{transferNotice}
+					</div>
+				{/if}
+				<div
+					class="flex items-center justify-between border-b border-slate-200 px-4 py-2 text-xs text-slate-500"
+				>
+					<div class="truncate pr-2">
+						{#if selectedHealth}
+							<span class="font-medium text-slate-700">{selectedHealth.state}</span>
+							- {selectedHealth.message}
+						{:else}
+							Pending first health check...
+						{/if}
+					</div>
+					<div class="min-w-fit">
+						mode: <span class="font-medium text-slate-700">{selectedEmbedMode}</span>
+					</div>
+				</div>
+				{#if selectedEmbedMode === 'proxy'}
+					<div class="border-b border-slate-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+						Realtime WebSocket features may require opening the server directly in a new tab.
+					</div>
+				{/if}
+
+				{#if selfEmbeddingBlocked}
+					<div class="flex flex-1 items-center justify-center p-8 text-center">
+						<div
+							class="max-w-xl rounded-lg border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900"
+						>
+							This server points to the current Opencode Hub origin. Self-embedding is blocked to
+							avoid nested recursive UIs.
+						</div>
+					</div>
+				{:else if selectedEmbedUrl}
+					<iframe
+						title={`Embedded ${selectedServer.name}`}
+						src={selectedEmbedUrl}
+						class="h-full w-full flex-1"
+						referrerpolicy="no-referrer"
+						sandbox="allow-forms allow-modals allow-popups allow-same-origin allow-scripts allow-downloads"
+					></iframe>
+				{/if}
+
+				<div
+					class="flex items-center justify-between border-t border-slate-200 px-4 py-2 text-xs text-slate-500"
+				>
+					<span>If embedding fails, open the remote UI directly.</span>
+					<a
+						href={selectedServer.baseUrl}
+						target="_blank"
+						rel="external noreferrer noopener"
+						class="font-medium text-slate-700 hover:text-slate-900"
+					>
+						Open in new tab
+					</a>
+				</div>
+			</section>
+		{/if}
+	</div>
+</main>
+
+{#if formOpen}
+	<div
+		class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/45 px-4"
+		role="dialog"
+		aria-modal="true"
+		tabindex="-1"
+		onkeydown={onFormEscape}
+	>
+		<div class="w-full max-w-2xl rounded-xl border border-slate-200 bg-white shadow-lg">
+			<div class="border-b border-slate-200 px-6 py-4">
+				<h2 class="text-lg font-semibold text-slate-900">
+					{editingServer ? 'Edit server' : 'Add opencode server'}
+				</h2>
+				<p class="mt-1 text-sm text-slate-600">
+					Server URLs are normalized and validated before save.
+				</p>
+			</div>
+
+			<form class="space-y-4 px-6 py-5" onsubmit={submitServerForm}>
+				<div class="grid gap-4 md:grid-cols-2">
+					<label class="space-y-1 text-sm text-slate-700">
+						<span class="font-medium">Name</span>
+						<input
+							required
+							maxlength="80"
+							bind:value={formName}
+							class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+							placeholder="Primary"
+						/>
+					</label>
+					<label class="space-y-1 text-sm text-slate-700">
+						<span class="font-medium">Base URL</span>
+						<input
+							required
+							bind:value={formBaseUrl}
+							class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+							placeholder="https://opencode.example.com"
+						/>
+					</label>
+				</div>
+
+				<label class="block space-y-1 text-sm text-slate-700">
+					<span class="font-medium">Healthcheck URL (optional)</span>
+					<input
+						bind:value={formHealthcheckUrl}
+						class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+						placeholder="https://opencode.example.com/health"
+					/>
+				</label>
+
+				<label class="block space-y-1 text-sm text-slate-700">
+					<span class="font-medium">Description (optional)</span>
+					<textarea
+						rows="3"
+						maxlength="240"
+						bind:value={formDescription}
+						class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+						placeholder="Team cluster"
+					></textarea>
+				</label>
+
+				{#if formError}
+					<p class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+						{formError}
+					</p>
+				{/if}
+
+				<div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+					<button
+						type="button"
+						onclick={closeForm}
+						class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 focus:outline-none"
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 focus:ring-2 focus:ring-slate-300 focus:outline-none"
+					>
+						{editingServer ? 'Save changes' : 'Add server'}
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
+
+{#if deletingServerId}
+	<div class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/45 px-4">
+		<div class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-lg">
+			<h2 class="text-lg font-semibold text-slate-900">Delete server?</h2>
+			<p class="mt-2 text-sm text-slate-600">
+				This removes the server from your local list and clears proxy access for it.
+			</p>
+			<div class="mt-5 flex justify-end gap-2">
+				<button
+					type="button"
+					onclick={cancelDelete}
+					class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+				>
+					Cancel
+				</button>
+				<button
+					type="button"
+					onclick={deleteServerConfirmed}
+					class="rounded-lg bg-rose-700 px-4 py-2 text-sm text-white hover:bg-rose-600"
+				>
+					Delete
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}

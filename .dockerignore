@@ -1,0 +1,12 @@
+node_modules
+.svelte-kit
+build
+.git
+.github
+.DS_Store
+npm-debug.log*
+.env
+.env.*
+!.env.example
+Dockerfile.dev
+docker-compose.yml
