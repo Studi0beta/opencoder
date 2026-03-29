@@ -482,6 +482,16 @@
 		>
 			{#if topBarHidden}
 				<div class="flex items-center gap-3 p-4 md:p-5">
+					<a
+						class="flex min-w-fit items-center gap-2 rounded-xl px-1 focus:ring-2 focus:outline-none"
+						href="https://github.com/Studi0beta/opencoder"
+						rel="noreferrer noopener"
+						target="_blank"
+					>
+						<img src="/logo.svg" alt="" class="h-8 w-8 rounded-lg object-contain" />
+						<span class="text-sm font-semibold" style="color: var(--hub-text);">Opencoder</span>
+					</a>
+
 					<div
 						class="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border px-3 py-2.5"
 						style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-bg) 22%, var(--hub-surface));"
@@ -695,10 +705,7 @@
 />
 
 <main class="transition-[padding] duration-300" style={`padding-top: ${topBarHeight + 12}px;`}>
-	<div
-		class="mx-auto min-h-0 max-w-[1200px] px-3 md:px-5"
-		style={`height: calc(100dvh - ${topBarHeight + 12}px);`}
-	>
+	<div class="min-h-0 w-full" style={`height: calc(100dvh - ${topBarHeight + 12}px);`}>
 		{#if !selectedServer}
 			<section
 				class="flex h-full min-h-0 items-center justify-center rounded-xl border border-dashed p-10 text-center"
