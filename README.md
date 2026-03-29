@@ -8,7 +8,7 @@ Opencoder is a simple dashboard for OpenCode Web servers.
 
 It provides:
 
-- fixed top bar with server list and selection persisted on the server
+- fixed top bar with brand, server selector, and action buttons persisted on the server
 - server CRUD with URL normalization + duplicate prevention
 - periodic health checks with online/offline/degraded states
 - direct iframe embedding when allowed

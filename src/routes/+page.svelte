@@ -27,6 +27,10 @@
 
 	const POLL_INTERVAL_MS = 45000;
 	const REFRESH_DEBOUNCE_MS = 600;
+	const toolbarButtonClass =
+		'rounded-xl border px-2.5 py-1.5 text-[11px] font-medium transition hover:opacity-90';
+	const toolbarButtonStyle =
+		'border-color: var(--hub-border); color: var(--hub-text); background: color-mix(in srgb, var(--hub-surface) 80%, transparent);';
 
 	let { data }: { data: PageData } = $props();
 
@@ -39,8 +43,8 @@
 	let formHealthcheckUrl = $state('');
 	let deletingServerId = $state<string | null>(null);
 	let setupGuideOpen = $state(false);
-	let topBarHidden = $state(false);
 	let topBarElement = $state<HTMLElement | null>(null);
+	let topBarShellElement = $state<HTMLDivElement | null>(null);
 	let topBarHeight = $state(248);
 	let healthByServerId = $state<Record<string, ServerHealth | undefined>>({});
 	let isRefreshing = $state(false);
@@ -114,11 +118,12 @@
 			return;
 		}
 
-		topBarHeight = topBarElement.offsetHeight;
+		const measuredHeight =
+			topBarShellElement?.offsetHeight ?? topBarElement.scrollHeight ?? topBarElement.offsetHeight;
+		topBarHeight = measuredHeight;
 	}
 
 	onMount(() => {
-		topBarHidden = localStorage.getItem('opencoder.topbar.hidden') === 'true';
 		registry = data.appState.registry;
 		activeThemePresetId = data.appState.theme.activeThemePresetId;
 		activePalette = data.appState.theme.activePalette;
@@ -139,6 +144,10 @@
 
 		if (topBarElement && observer) {
 			observer.observe(topBarElement);
+		}
+
+		if (topBarShellElement && observer) {
+			observer.observe(topBarShellElement);
 		}
 		updateTopBarHeight();
 		void refreshHealth(true);
@@ -340,18 +349,6 @@
 		return servers.find((item) => item.id === id)?.name ?? '';
 	}
 
-	function setTopBarHidden(hidden: boolean): void {
-		topBarHidden = hidden;
-		if (browser) {
-			window.requestAnimationFrame(() => {
-				updateTopBarHeight();
-			});
-		}
-		if (browser) {
-			localStorage.setItem('opencoder.topbar.hidden', String(hidden));
-		}
-	}
-
 	function submitServerForm(event: SubmitEvent): void {
 		event.preventDefault();
 		saveServer(
@@ -474,14 +471,21 @@
 	}
 </script>
 
-<header bind:this={topBarElement} class="fixed inset-x-0 top-0 z-20 transition-all duration-300">
-	<div class="mx-auto max-w-[1200px] px-3 pt-3 md:px-5 md:pt-4">
+<header
+	bind:this={topBarElement}
+	class="fixed inset-x-0 top-0 z-20 transition-all duration-300"
+	style={`height: ${topBarHeight}px;`}
+>
+	<div
+		bind:this={topBarShellElement}
+		class="relative mx-auto w-full max-w-[1200px] px-3 pt-3 md:px-5 md:pt-4"
+	>
 		<div
-			class="overflow-visible rounded-[1.75rem] border shadow-2xl backdrop-blur"
+			class="w-full overflow-visible rounded-[1.75rem] border shadow-2xl backdrop-blur"
 			style="border-color: color-mix(in srgb, var(--hub-border) 72%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--hub-surface) 94%, transparent), color-mix(in srgb, var(--hub-surface-2) 88%, transparent));"
 		>
-			{#if topBarHidden}
-				<div class="flex items-center gap-3 p-4 md:p-5">
+			<div class="flex w-full flex-col gap-4 p-4 md:p-5">
+				<div class="flex flex-col gap-4 lg:flex-row lg:items-center">
 					<a
 						class="flex min-w-fit items-center gap-3 rounded-2xl px-1 focus:ring-2 focus:outline-none"
 						href="https://github.com/Studi0beta/opencoder"
@@ -496,10 +500,7 @@
 						</div>
 					</a>
 
-					<div
-						class="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border px-3 py-2.5"
-						style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-bg) 22%, var(--hub-surface));"
-					>
+					<div class="flex min-w-0 flex-1 items-center gap-2 py-1">
 						{#if selectedServer}
 							<StatusDot state={selectedHealth?.state ?? 'unknown'} />
 						{/if}
@@ -519,183 +520,61 @@
 									<option
 										value={server.id}
 										style="background: var(--hub-surface); color: var(--hub-text);"
+										>{server.name}</option
 									>
-										{server.name}
-									</option>
 								{/each}
 							{/if}
 						</select>
 						<span class="pointer-events-none -ml-6 text-xs" style="color: var(--hub-muted);">▾</span
 						>
 					</div>
-					<button
-						type="button"
-						onclick={() => setTopBarHidden(false)}
-						class="rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.2em] uppercase"
-						style="border-color: var(--hub-border); color: var(--hub-muted); background: color-mix(in srgb, var(--hub-surface) 85%, transparent);"
-					>
-						Show
-					</button>
-				</div>
-			{:else}
-				<div class="flex flex-col gap-4 p-4 md:p-5">
-					<div class="flex items-start justify-between gap-3">
-						<a
-							class="flex min-w-0 items-center gap-3 rounded-2xl focus:ring-2 focus:outline-none"
-							href="https://github.com/Studi0beta/opencoder"
-							rel="noreferrer noopener"
-							target="_blank"
-						>
-							<img src="/logo.svg" alt="" class="h-11 w-11 rounded-2xl object-contain" />
-							<div class="min-w-0">
-								<div
-									class="text-[11px] tracking-[0.32em] uppercase"
-									style="color: var(--hub-muted);"
-								>
-									Stack Focus
-								</div>
-								<h1 class="text-lg font-semibold md:text-xl" style="color: var(--hub-text);">
-									Opencoder
-								</h1>
-								<p class="truncate text-xs md:text-sm" style="color: var(--hub-muted);">
-									One place to keep every OpenCode server in sight.
-								</p>
-							</div>
-						</a>
 
+					<div class="ml-auto flex flex-wrap items-center justify-end gap-1.5 md:gap-2">
+						<ThemeEditor
+							presets={DEFAULT_THEME_PRESETS}
+							activePresetId={activeThemePresetId}
+							{activePalette}
+							{savedPalettes}
+							onApplyPreset={handleApplyThemePreset}
+							onPreviewPalette={handlePreviewThemePalette}
+							onSavePalette={handleSaveThemePalette}
+							onApplySavedPalette={handleApplySavedThemePalette}
+							onDeleteSavedPalette={handleDeleteSavedThemePalette}
+							onReset={handleResetTheme}
+						/>
 						<button
 							type="button"
-							onclick={() => setTopBarHidden(true)}
-							class="rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.2em] uppercase"
-							style="border-color: var(--hub-border); color: var(--hub-muted); background: color-mix(in srgb, var(--hub-surface) 85%, transparent);"
+							onclick={() => (setupGuideOpen = true)}
+							class={toolbarButtonClass}
+							style={toolbarButtonStyle}>Help</button
 						>
-							Hide
-						</button>
-					</div>
-
-					<div class="grid gap-3 md:grid-cols-[minmax(0,1.3fr)_auto] md:items-end">
-						<div class="space-y-2">
-							<p
-								class="block text-[11px] tracking-[0.28em] uppercase"
-								style="color: var(--hub-muted);"
-							>
-								Selected server
-							</p>
-							<div
-								class="flex items-center gap-2 rounded-2xl border px-3 py-3"
-								style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-bg) 22%, var(--hub-surface));"
-							>
-								{#if selectedServer}
-									<StatusDot state={selectedHealth?.state ?? 'unknown'} />
-								{/if}
-								<select
-									class="w-full min-w-0 appearance-none rounded-md border px-2 py-1 pr-7 text-sm font-medium outline-none md:text-base"
-									style="border-color: color-mix(in srgb, var(--hub-border) 75%, transparent); color: var(--hub-text); background: color-mix(in srgb, var(--hub-surface) 86%, transparent);"
-									disabled={servers.length === 0}
-									value={selectedServerId ?? ''}
-									onchange={(event) =>
-										selectServer((event.currentTarget as HTMLSelectElement).value)}
-								>
-									{#if servers.length === 0}
-										<option value="" style="background: var(--hub-surface); color: var(--hub-text);"
-											>No servers yet</option
-										>
-									{:else}
-										{#each servers as server (server.id)}
-											<option
-												value={server.id}
-												style="background: var(--hub-surface); color: var(--hub-text);"
-											>
-												{server.name}
-											</option>
-										{/each}
-									{/if}
-								</select>
-								<span class="pointer-events-none -ml-6 text-xs" style="color: var(--hub-muted);"
-									>▾</span
-								>
-							</div>
-							{#if selectedServerId}
-								<div
-									class="space-y-1 rounded-2xl border px-3 py-2 text-xs"
-									style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-surface) 72%, transparent); color: var(--hub-muted);"
-								>
-									<div class="truncate">
-										<span class="font-semibold" style="color: var(--hub-text);"
-											>{selectedServerName(selectedServerId)}</span
-										>
-										<span class="px-1">·</span>
-										<span class="font-mono">{selectedServerBaseUrl(selectedServerId)}</span>
-									</div>
-									<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-										<span>Checked {lastCheckedValue(selectedServerId)}</span>
-										<button
-											type="button"
-											class="font-medium"
-											style="color: var(--hub-text);"
-											onclick={() => openEditServer(selectedServerId)}>Edit</button
-										>
-										<button
-											type="button"
-											class="font-medium text-rose-300"
-											onclick={() => confirmDeleteServer(selectedServerId)}>Delete</button
-										>
-									</div>
-								</div>
-							{/if}
-						</div>
-
-						<div class="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:justify-end">
-							<ThemeEditor
-								presets={DEFAULT_THEME_PRESETS}
-								activePresetId={activeThemePresetId}
-								{activePalette}
-								{savedPalettes}
-								onApplyPreset={handleApplyThemePreset}
-								onPreviewPalette={handlePreviewThemePalette}
-								onSavePalette={handleSaveThemePalette}
-								onApplySavedPalette={handleApplySavedThemePalette}
-								onDeleteSavedPalette={handleDeleteSavedThemePalette}
-								onReset={handleResetTheme}
-							/>
-							<button
-								type="button"
-								onclick={() => (setupGuideOpen = true)}
-								class="rounded-2xl border px-3 py-2 text-xs font-medium"
-								style="border-color: var(--hub-border); color: var(--hub-text); background: color-mix(in srgb, var(--hub-surface) 80%, transparent);"
-								>Help</button
-							>
-							<button
-								type="button"
-								onclick={triggerImport}
-								class="rounded-2xl border px-3 py-2 text-xs font-medium"
-								style="border-color: var(--hub-border); color: var(--hub-text); background: color-mix(in srgb, var(--hub-surface) 80%, transparent);"
-								>Import</button
-							>
-							<button
-								type="button"
-								onclick={exportServers}
-								class="rounded-2xl border px-3 py-2 text-xs font-medium"
-								style="border-color: var(--hub-border); color: var(--hub-text); background: color-mix(in srgb, var(--hub-surface) 80%, transparent);"
-								>Export</button
-							>
-							<button
-								type="button"
-								onclick={() => void refreshHealth(true)}
-								class="rounded-2xl border px-3 py-2 text-xs font-medium"
-								style="border-color: var(--hub-border); color: var(--hub-text); background: color-mix(in srgb, var(--hub-surface) 80%, transparent);"
-								>Refresh</button
-							>
-							<button
-								type="button"
-								onclick={openAddServer}
-								class="col-span-2 rounded-2xl px-4 py-2 text-xs font-semibold md:col-span-1"
-								style="background: var(--hub-brand); color: var(--hub-bg);">Add server</button
-							>
-						</div>
+						<button
+							type="button"
+							onclick={triggerImport}
+							class={toolbarButtonClass}
+							style={toolbarButtonStyle}>Import</button
+						>
+						<button
+							type="button"
+							onclick={exportServers}
+							class={toolbarButtonClass}
+							style={toolbarButtonStyle}>Export</button
+						>
+						<button
+							type="button"
+							onclick={() => void refreshHealth(true)}
+							class={toolbarButtonClass}
+							style={toolbarButtonStyle}>Refresh</button
+						>
+						<button
+							type="button"
+							onclick={openAddServer}
+							class={`${toolbarButtonClass} border-transparent bg-[color:var(--hub-brand)] text-[color:var(--hub-bg)]`}
+							style="border-color: transparent;">Add server</button
+						>
 					</div>
 				</div>
-			{/if}
+			</div>
 		</div>
 	</div>
 </header>
@@ -747,17 +626,29 @@
 					</div>
 				{/if}
 				<div
-					class="flex items-center justify-between border-b px-4 py-2 text-xs"
+					class="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2 text-xs"
 					style="border-color: var(--hub-border); color: var(--hub-muted);"
 				>
-					<div class="truncate pr-2">
-						{#if selectedHealth}
-							<span class="font-medium" style="color: var(--hub-text);">{selectedHealth.state}</span
-							>
-							- {selectedHealth.message}
-						{:else}
-							Pending first health check...
-						{/if}
+					<div class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 pr-2">
+						<span class="font-semibold" style="color: var(--hub-text);">
+							{selectedServer.name}
+						</span>
+						<span class="text-[10px] tracking-[0.2em] uppercase" style="color: var(--hub-muted);"
+							>URL</span
+						>
+						<span class="truncate font-mono text-[11px]" style="color: var(--hub-muted);">
+							{selectedServer.baseUrl}
+						</span>
+						<span style="color: var(--hub-muted);">
+							{#if selectedHealth}
+								<span class="font-medium" style="color: var(--hub-text);"
+									>{selectedHealth.state}</span
+								>
+								- {selectedHealth.message}
+							{:else}
+								Pending first health check...
+							{/if}
+						</span>
 					</div>
 					<div class="min-w-fit">
 						mode: <span class="font-medium" style="color: var(--hub-text);"

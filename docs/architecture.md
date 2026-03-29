@@ -6,7 +6,7 @@ Opencode Hub is a SvelteKit shell for managing multiple OpenCode Web servers. It
 
 ## Layout
 
-- Fixed top bar: server tabs, CRUD actions, theme editor, import/export.
+- Fixed top bar: brand, server selector, CRUD actions, theme editor, import/export.
 - Main panel: selected server embed or empty-state onboarding.
 - Overlay surfaces: add/edit/delete dialogs and the setup guide drawer.
 

@@ -94,7 +94,7 @@
 	<button
 		type="button"
 		onclick={() => (open ? (open = false) : openPanel())}
-		class="rounded-lg border px-3 py-1.5 text-xs transition hover:opacity-90 focus:ring-2 focus:outline-none"
+		class="rounded-xl border px-2.5 py-1.5 text-[11px] font-medium transition hover:opacity-90 focus:ring-2 focus:outline-none"
 		style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface);"
 	>
 		Theme
