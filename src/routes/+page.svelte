@@ -483,13 +483,17 @@
 			{#if topBarHidden}
 				<div class="flex items-center gap-3 p-4 md:p-5">
 					<a
-						class="flex min-w-fit items-center gap-2 rounded-xl px-1 focus:ring-2 focus:outline-none"
+						class="flex min-w-fit items-center gap-3 rounded-2xl px-1 focus:ring-2 focus:outline-none"
 						href="https://github.com/Studi0beta/opencoder"
 						rel="noreferrer noopener"
 						target="_blank"
 					>
-						<img src="/logo.svg" alt="" class="h-8 w-8 rounded-lg object-contain" />
-						<span class="text-sm font-semibold" style="color: var(--hub-text);">Opencoder</span>
+						<img src="/logo.svg" alt="" class="h-11 w-11 rounded-2xl object-contain" />
+						<div class="min-w-0">
+							<h1 class="text-lg font-semibold md:text-xl" style="color: var(--hub-text);">
+								Opencoder
+							</h1>
+						</div>
 					</a>
 
 					<div
