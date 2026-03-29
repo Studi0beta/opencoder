@@ -623,10 +623,16 @@
 <main
 	class={`transition-[padding] duration-300 ${topBarHidden ? 'pt-6 md:pt-8' : 'pt-64 md:pt-52'}`}
 >
-	<div class="mx-auto min-h-[calc(100vh-2rem)] max-w-[1200px] px-3 pb-3 md:px-5 md:pb-5">
+	<div
+		class={`mx-auto min-h-0 max-w-[1200px] px-3 md:px-5 ${
+			topBarHidden
+				? 'h-[calc(100dvh-1.5rem)] md:h-[calc(100dvh-2rem)]'
+				: 'h-[calc(100dvh-16rem)] md:h-[calc(100dvh-13rem)]'
+		}`}
+	>
 		{#if !selectedServer}
 			<section
-				class="flex h-full items-center justify-center rounded-xl border border-dashed p-10 text-center"
+				class="flex h-full min-h-0 items-center justify-center rounded-xl border border-dashed p-10 text-center"
 				style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-surface) 84%, transparent);"
 			>
 				<div class="max-w-lg space-y-3">
@@ -649,7 +655,7 @@
 			</section>
 		{:else}
 			<section
-				class="flex h-full w-full flex-col overflow-hidden border"
+				class="flex h-full min-h-0 w-full flex-col overflow-hidden border"
 				style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-surface) 96%, white);"
 			>
 				{#if transferNotice}
@@ -698,7 +704,7 @@
 					<iframe
 						title={`Embedded ${selectedServer.name}`}
 						src={selectedEmbedUrl}
-						class="h-full w-full flex-1"
+						class="h-full min-h-0 w-full flex-1"
 						style="background: var(--hub-bg); border-top: 1px solid var(--hub-border); border-bottom: 1px solid var(--hub-border);"
 						referrerpolicy="no-referrer"
 						sandbox="allow-forms allow-modals allow-popups allow-same-origin allow-scripts allow-downloads"
