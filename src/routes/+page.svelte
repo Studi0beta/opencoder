@@ -39,6 +39,7 @@
 	let formHealthcheckUrl = $state('');
 	let deletingServerId = $state<string | null>(null);
 	let setupGuideOpen = $state(false);
+	let topBarHidden = $state(false);
 	let healthByServerId = $state<Record<string, ServerHealth | undefined>>({});
 	let isRefreshing = $state(false);
 	let lastRefreshAt = $state(0);
@@ -107,6 +108,7 @@
 	let intervalId = 0;
 
 	onMount(() => {
+		topBarHidden = localStorage.getItem('opencoder.topbar.hidden') === 'true';
 		registry = data.appState.registry;
 		activeThemePresetId = data.appState.theme.activeThemePresetId;
 		activePalette = data.appState.theme.activePalette;
@@ -311,6 +313,17 @@
 		return servers.find((item) => item.id === id)?.baseUrl ?? '';
 	}
 
+	function selectedServerName(id: string): string {
+		return servers.find((item) => item.id === id)?.name ?? '';
+	}
+
+	function setTopBarHidden(hidden: boolean): void {
+		topBarHidden = hidden;
+		if (browser) {
+			localStorage.setItem('opencoder.topbar.hidden', String(hidden));
+		}
+	}
+
 	function submitServerForm(event: SubmitEvent): void {
 		event.preventDefault();
 		saveServer(
@@ -433,140 +446,170 @@
 	}
 </script>
 
-<header
-	class="fixed inset-x-0 top-0 z-20 border-b backdrop-blur"
-	style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-surface) 88%, transparent);"
->
-	<div class="mx-auto flex h-16 max-w-[1800px] items-center gap-3 px-3 md:px-5">
-		<div class="mr-2 min-w-fit">
-			<a
-				class="flex items-center gap-2 rounded-md focus:ring-2 focus:outline-none"
-				href="https://github.com/Studi0beta/opencoder"
-				rel="noreferrer noopener"
-				target="_blank"
-			>
-				<img src="/logo.svg" alt="" class="h-10 w-10 rounded-md object-contain" />
-				<h1
-					class="text-sm font-semibold tracking-wide md:text-base"
-					style="color: var(--hub-text);"
-				>
-					Opencoder
-				</h1>
-			</a>
-		</div>
+{#if topBarHidden}
+	<button
+		type="button"
+		onclick={() => setTopBarHidden(false)}
+		class="fixed top-4 left-4 z-30 rounded-full border px-3 py-2 text-xs font-medium shadow-lg backdrop-blur"
+		style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-surface) 92%, transparent); color: var(--hub-text);"
+	>
+		Show bar
+	</button>
+{/if}
 
+<header
+	class={`fixed inset-x-0 top-0 z-20 transition-transform duration-300 ${topBarHidden ? '-translate-y-[110%]' : 'translate-y-0'}`}
+>
+	<div class="mx-auto max-w-[1200px] px-3 pt-3 md:px-5 md:pt-4">
 		<div
-			class="min-w-0 flex-1 overflow-x-auto [scrollbar-width:thin]"
-			style="scroll-padding-inline: 0.5rem;"
+			class="overflow-hidden rounded-[1.75rem] border shadow-2xl backdrop-blur"
+			style="border-color: color-mix(in srgb, var(--hub-border) 72%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--hub-surface) 94%, transparent), color-mix(in srgb, var(--hub-surface-2) 88%, transparent));"
 		>
-			<div class="flex min-w-max items-center gap-2 py-1 pr-2 pl-2">
-				{#if servers.length === 0}
-					<span
-						class="rounded-md border border-dashed px-3 py-1.5 text-xs"
-						style="border-color: var(--hub-border); color: var(--hub-muted);">No servers yet</span
+			<div class="flex flex-col gap-4 p-4 md:p-5">
+				<div class="flex items-start justify-between gap-3">
+					<a
+						class="flex min-w-0 items-center gap-3 rounded-2xl focus:ring-2 focus:outline-none"
+						href="https://github.com/Studi0beta/opencoder"
+						rel="noreferrer noopener"
+						target="_blank"
 					>
-				{:else}
-					{#each servers as server (server.id)}
-						{@const selected = selectedServerId === server.id}
+						<img src="/logo.svg" alt="" class="h-11 w-11 rounded-2xl object-contain" />
+						<div class="min-w-0">
+							<div class="text-[11px] tracking-[0.32em] uppercase" style="color: var(--hub-muted);">
+								Stack Focus
+							</div>
+							<h1 class="text-lg font-semibold md:text-xl" style="color: var(--hub-text);">
+								Opencoder
+							</h1>
+							<p class="truncate text-xs md:text-sm" style="color: var(--hub-muted);">
+								One place to keep every OpenCode server in sight.
+							</p>
+						</div>
+					</a>
+
+					<button
+						type="button"
+						onclick={() => setTopBarHidden(true)}
+						class="rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.2em] uppercase"
+						style="border-color: var(--hub-border); color: var(--hub-muted); background: color-mix(in srgb, var(--hub-surface) 85%, transparent);"
+					>
+						Hide
+					</button>
+				</div>
+
+				<div class="grid gap-3 md:grid-cols-[minmax(0,1.3fr)_auto] md:items-end">
+					<div class="space-y-2">
+						<p
+							class="block text-[11px] tracking-[0.28em] uppercase"
+							style="color: var(--hub-muted);"
+						>
+							Selected server
+						</p>
+						<div
+							class="flex items-center gap-2 rounded-2xl border px-3 py-3"
+							style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-bg) 22%, var(--hub-surface));"
+						>
+							{#if selectedServer}
+								<StatusDot state={selectedHealth?.state ?? 'unknown'} />
+							{/if}
+							<select
+								class="w-full min-w-0 bg-transparent text-sm font-medium outline-none md:text-base"
+								style="color: var(--hub-text);"
+								disabled={servers.length === 0}
+								value={selectedServerId ?? ''}
+								onchange={(event) => selectServer((event.currentTarget as HTMLSelectElement).value)}
+							>
+								{#if servers.length === 0}
+									<option value="">No servers yet</option>
+								{:else}
+									{#each servers as server (server.id)}
+										<option value={server.id}>{server.name}</option>
+									{/each}
+								{/if}
+							</select>
+						</div>
+						{#if selectedServerId}
+							<div
+								class="space-y-1 rounded-2xl border px-3 py-2 text-xs"
+								style="border-color: var(--hub-border); background: color-mix(in srgb, var(--hub-surface) 72%, transparent); color: var(--hub-muted);"
+							>
+								<div class="truncate">
+									<span class="font-semibold" style="color: var(--hub-text);"
+										>{selectedServerName(selectedServerId)}</span
+									>
+									<span class="px-1">·</span>
+									<span class="font-mono">{selectedServerBaseUrl(selectedServerId)}</span>
+								</div>
+								<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+									<span>Checked {lastCheckedValue(selectedServerId)}</span>
+									<button
+										type="button"
+										class="font-medium"
+										style="color: var(--hub-text);"
+										onclick={() => openEditServer(selectedServerId)}>Edit</button
+									>
+									<button
+										type="button"
+										class="font-medium text-rose-300"
+										onclick={() => confirmDeleteServer(selectedServerId)}>Delete</button
+									>
+								</div>
+							</div>
+						{/if}
+					</div>
+
+					<div class="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:justify-end">
+						<ThemeEditor
+							presets={DEFAULT_THEME_PRESETS}
+							activePresetId={activeThemePresetId}
+							{activePalette}
+							{savedPalettes}
+							onApplyPreset={handleApplyThemePreset}
+							onPreviewPalette={handlePreviewThemePalette}
+							onSavePalette={handleSaveThemePalette}
+							onApplySavedPalette={handleApplySavedThemePalette}
+							onDeleteSavedPalette={handleDeleteSavedThemePalette}
+							onReset={handleResetTheme}
+						/>
 						<button
 							type="button"
-							onclick={() => selectServer(server.id)}
-							class={`group inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs transition focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent focus:outline-none ${
-								selected ? 'shadow-sm' : 'hover:opacity-90'
-							}`}
-							style={`border-color: ${selected ? 'var(--hub-brand)' : 'var(--hub-border)'}; background: ${selected ? 'var(--hub-brand)' : 'var(--hub-surface)'}; color: ${selected ? 'var(--hub-bg)' : 'var(--hub-text)'};`}
-							aria-pressed={selected}
+							onclick={() => (setupGuideOpen = true)}
+							class="rounded-2xl border px-3 py-2 text-xs font-medium"
+							style="border-color: var(--hub-border); color: var(--hub-text); background: color-mix(in srgb, var(--hub-surface) 80%, transparent);"
+							>Help</button
 						>
-							<StatusDot state={healthByServerId[server.id]?.state ?? 'unknown'} />
-							<span class="max-w-40 truncate font-medium">{server.name}</span>
-						</button>
-					{/each}
-				{/if}
+						<button
+							type="button"
+							onclick={triggerImport}
+							class="rounded-2xl border px-3 py-2 text-xs font-medium"
+							style="border-color: var(--hub-border); color: var(--hub-text); background: color-mix(in srgb, var(--hub-surface) 80%, transparent);"
+							>Import</button
+						>
+						<button
+							type="button"
+							onclick={exportServers}
+							class="rounded-2xl border px-3 py-2 text-xs font-medium"
+							style="border-color: var(--hub-border); color: var(--hub-text); background: color-mix(in srgb, var(--hub-surface) 80%, transparent);"
+							>Export</button
+						>
+						<button
+							type="button"
+							onclick={() => void refreshHealth(true)}
+							class="rounded-2xl border px-3 py-2 text-xs font-medium"
+							style="border-color: var(--hub-border); color: var(--hub-text); background: color-mix(in srgb, var(--hub-surface) 80%, transparent);"
+							>Refresh</button
+						>
+						<button
+							type="button"
+							onclick={openAddServer}
+							class="col-span-2 rounded-2xl px-4 py-2 text-xs font-semibold md:col-span-1"
+							style="background: var(--hub-brand); color: var(--hub-bg);">Add server</button
+						>
+					</div>
+				</div>
 			</div>
-		</div>
-
-		<div class="flex items-center gap-2">
-			<ThemeEditor
-				presets={DEFAULT_THEME_PRESETS}
-				activePresetId={activeThemePresetId}
-				{activePalette}
-				{savedPalettes}
-				onApplyPreset={handleApplyThemePreset}
-				onPreviewPalette={handlePreviewThemePalette}
-				onSavePalette={handleSaveThemePalette}
-				onApplySavedPalette={handleApplySavedThemePalette}
-				onDeleteSavedPalette={handleDeleteSavedThemePalette}
-				onReset={handleResetTheme}
-			/>
-			<button
-				type="button"
-				onclick={() => {
-					setupGuideOpen = true;
-				}}
-				class="rounded-lg border px-3 py-1.5 text-xs transition hover:opacity-90 focus:ring-2 focus:outline-none"
-				style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface);"
-			>
-				Help
-			</button>
-			<button
-				type="button"
-				onclick={triggerImport}
-				class="rounded-lg border px-3 py-1.5 text-xs transition hover:opacity-90 focus:ring-2 focus:outline-none"
-				style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface);"
-			>
-				Import
-			</button>
-			<button
-				type="button"
-				onclick={exportServers}
-				class="rounded-lg border px-3 py-1.5 text-xs transition hover:opacity-90 focus:ring-2 focus:outline-none"
-				style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface);"
-			>
-				Export
-			</button>
-			<button
-				type="button"
-				onclick={() => {
-					void refreshHealth(true);
-				}}
-				class="rounded-lg border px-3 py-1.5 text-xs transition hover:opacity-90 focus:ring-2 focus:outline-none"
-				style="border-color: var(--hub-border); color: var(--hub-text); background: var(--hub-surface);"
-			>
-				Refresh
-			</button>
-			<button
-				type="button"
-				onclick={openAddServer}
-				class="rounded-lg px-3 py-1.5 text-xs font-medium transition hover:opacity-90 focus:ring-2 focus:outline-none"
-				style="background: var(--hub-brand); color: var(--hub-bg);"
-			>
-				Add server
-			</button>
 		</div>
 	</div>
-
-	{#if selectedServerId}
-		<div
-			class="mx-auto flex h-8 max-w-[1800px] items-center justify-between border-t px-3 text-[11px] md:px-5"
-			style="border-color: var(--hub-border); color: var(--hub-muted);"
-		>
-			<div class="truncate pr-2">{selectedServerBaseUrl(selectedServerId)}</div>
-			<div class="flex min-w-fit items-center gap-2">
-				<span>Checked: {lastCheckedValue(selectedServerId)}</span>
-				<button
-					type="button"
-					class="transition hover:opacity-85"
-					style="color: var(--hub-text);"
-					onclick={() => openEditServer(selectedServerId)}>Edit</button
-				>
-				<button
-					type="button"
-					class="text-rose-700 hover:text-rose-900"
-					onclick={() => confirmDeleteServer(selectedServerId)}>Delete</button
-				>
-			</div>
-		</div>
-	{/if}
 </header>
 
 <input
@@ -577,8 +620,10 @@
 	onchange={onImportFile}
 />
 
-<main class="pt-24 md:pt-24">
-	<div class="h-[calc(100vh-6rem)] w-full">
+<main
+	class={`transition-[padding] duration-300 ${topBarHidden ? 'pt-6 md:pt-8' : 'pt-64 md:pt-52'}`}
+>
+	<div class="mx-auto min-h-[calc(100vh-2rem)] max-w-[1200px] px-3 pb-3 md:px-5 md:pb-5">
 		{#if !selectedServer}
 			<section
 				class="flex h-full items-center justify-center rounded-xl border border-dashed p-10 text-center"
